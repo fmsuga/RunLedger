@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deltarunners - Alumnos</title>
+<title>RunLedger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Literata:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -527,7 +527,7 @@ header {
 
 <header>
   <div class="topbar">
-    <span class="app-name">Deltarunners - Alumnos</span>
+    <span class="app-name">RUNLEDGER</span>
     <div class="header-actions">
       <button class="icon-btn" onclick="configurarPrecio()">⚙ Precio</button>
       <button class="icon-btn" onclick="exportar()">↓ Export</button>
@@ -591,15 +591,34 @@ header {
   </div>
 </div>
 
-<script>
-// ─── STORAGE ──────────────────────────────────────────────────────────────────
-const KEY_DATA   = 'runledger_alumnos';
-const KEY_CONFIG = 'runledger_config';
+<script type="module">
+import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc,
+         onSnapshot, collection, getDocs }        from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
-const cargar       = () => JSON.parse(localStorage.getItem(KEY_DATA))   || [];
-const guardar      = d => localStorage.setItem(KEY_DATA, JSON.stringify(d));
-const cargarConfig = () => JSON.parse(localStorage.getItem(KEY_CONFIG)) || { precio: 0 };
-const guardarConfig= c => localStorage.setItem(KEY_CONFIG, JSON.stringify(c));
+// ─── FIREBASE CONFIG ─────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyDD_BHObMSasVcUwFIUOm_M100uCakI498",
+  authDomain:        "runledger.firebaseapp.com",
+  projectId:         "runledger",
+  storageBucket:     "runledger.firebasestorage.app",
+  messagingSenderId: "465777579099",
+  appId:             "1:465777579099:web:180da05212713cd0101b7e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// Documentos en Firestore:
+//   runledger/alumnos  → { lista: [...] }
+//   runledger/config   → { precio: number }
+const REF_ALUMNOS = doc(db, 'runledger', 'alumnos');
+const REF_CONFIG  = doc(db, 'runledger', 'config');
+
+// Cache local (se sincroniza con Firestore en tiempo real)
+let _alumnos = [];
+let _config  = { precio: 0 };
+let _listo   = false;
 
 // ─── TIEMPO ──────────────────────────────────────────────────────────────────
 function getMesActual() {
@@ -621,67 +640,73 @@ function getEstado(a) {
   if (a.ultimoMesPagado === getMesActual()) return 'verde';
   return getDia() <= 10 ? 'amarillo' : 'rojo';
 }
-
 const ESTADO_LABEL = { verde: 'Al día', amarillo: 'Pendiente', rojo: 'Vencido' };
-const ESTADO_ORDER = { rojo: 0, amarillo: 1, verde: 2 };
 
-// ─── DATOS ───────────────────────────────────────────────────────────────────
-function agregarAlumno(nombre) {
-  const data = cargar();
-  data.push({
-    id: Date.now(),
-    nombre: nombre.trim(),
-    fechaAlta: new Date().toISOString().slice(0,10),
+// ─── FIRESTORE: GUARDAR ──────────────────────────────────────────────────────
+async function guardarAlumnos(lista) {
+  await setDoc(REF_ALUMNOS, { lista });
+}
+async function guardarConfig(cfg) {
+  await setDoc(REF_CONFIG, cfg);
+  _config = cfg;
+}
+
+// ─── OPERACIONES DE DATOS ────────────────────────────────────────────────────
+async function agregarAlumno(nombre) {
+  const lista = [..._alumnos, {
+    id:              Date.now(),
+    nombre:          nombre.trim(),
+    fechaAlta:       new Date().toISOString().slice(0,10),
     ultimoMesPagado: null,
-    ultimoPlanMes: null
-  });
-  guardar(data);
+    ultimoPlanMes:   null
+  }];
+  await guardarAlumnos(lista);
 }
 
-function eliminarAlumno(id) {
-  guardar(cargar().filter(a => a.id !== id));
+async function eliminarAlumno(id) {
+  await guardarAlumnos(_alumnos.filter(a => a.id !== id));
 }
 
-function pagarAlumno(id) {
-  const data = cargar();
-  const a = data.find(x => x.id === id);
-  if (!a || a.ultimoMesPagado === getMesActual()) return;
-  a.ultimoMesPagado = getMesActual();
-  guardar(data);
+async function pagarAlumno(id) {
+  const lista = _alumnos.map(a =>
+    a.id === id && a.ultimoMesPagado !== getMesActual()
+      ? { ...a, ultimoMesPagado: getMesActual() }
+      : a
+  );
+  await guardarAlumnos(lista);
 }
 
-function enviarPlan(id) {
-  const data = cargar();
-  const a = data.find(x => x.id === id);
-  if (!a || a.ultimoPlanMes === getMesActual()) return;
-  a.ultimoPlanMes = getMesActual();
-  guardar(data);
+async function enviarPlan(id) {
+  const lista = _alumnos.map(a =>
+    a.id === id && (a.ultimoPlanMes || null) !== getMesActual()
+      ? { ...a, ultimoPlanMes: getMesActual() }
+      : a
+  );
+  await guardarAlumnos(lista);
 }
 
 // ─── RENDER ALUMNOS ──────────────────────────────────────────────────────────
 function renderAlumnos() {
-  const data  = cargar();
   const lista = document.getElementById('lista');
   const mes   = getMesActual();
 
-  if (!data.length) {
-    lista.innerHTML = `<div class="empty">
-      <span class="empty-icon">📋</span>
-      No hay alumnos todavía.<br>Agregá el primero abajo.
-    </div>`;
+  if (!_listo) {
+    lista.innerHTML = `<div class="empty"><span class="empty-icon">⏳</span>Cargando...</div>`;
+    return;
+  }
+
+  if (!_alumnos.length) {
+    lista.innerHTML = `<div class="empty"><span class="empty-icon">📋</span>No hay alumnos todavía.<br>Agregá el primero abajo.</div>`;
     return;
   }
 
   const query  = (document.getElementById('buscar')?.value || '').toLowerCase().trim();
-  const sorted = [...data]
+  const sorted = [..._alumnos]
     .filter(a => !query || a.nombre.toLowerCase().includes(query))
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
 
   if (!sorted.length) {
-    lista.innerHTML = `<div class="empty">
-      <span class="empty-icon">🔍</span>
-      No se encontró "${esc(query)}"
-    </div>`;
+    lista.innerHTML = `<div class="empty"><span class="empty-icon">🔍</span>No se encontró "${esc(query)}"</div>`;
     return;
   }
 
@@ -689,7 +714,6 @@ function renderAlumnos() {
     const est         = getEstado(a);
     const pagado      = a.ultimoMesPagado === mes;
     const planEnviada = (a.ultimoPlanMes || null) === mes;
-
     return `
       <div class="card">
         <div class="indicador ${est}"></div>
@@ -714,10 +738,9 @@ function renderAlumnos() {
 
 // ─── RENDER RESUMEN ──────────────────────────────────────────────────────────
 function renderResumen() {
-  const data   = cargar();
-  const config = cargarConfig();
-  const precio = config.precio || 0;
+  const precio = _config.precio || 0;
   const mes    = getMesActual();
+  const data   = _alumnos;
 
   const total        = data.length;
   const pagaron      = data.filter(a => a.ultimoMesPagado === mes).length;
@@ -729,13 +752,10 @@ function renderResumen() {
   const faltante     = esperado - ingresado;
   const pct          = total ? Math.round((pagaron      / total) * 100) : 0;
   const pctPlan      = total ? Math.round((planEnviadas / total) * 100) : 0;
-
   const $ = n => precio > 0 ? '$' + n.toLocaleString('es-AR') : '—';
 
   document.getElementById('resumen-content').innerHTML = `
     <div class="resumen-papel">
-
-      <!-- MEMBRETE -->
       <div class="r-header">
         <div class="r-header-left">
           <div class="r-titulo">Resumen mensual</div>
@@ -746,8 +766,6 @@ function renderResumen() {
           <div class="r-mes-valor">${formatMesLabel(mes)}</div>
         </div>
       </div>
-
-      <!-- COBROS -->
       <div class="r-seccion">
         <div class="r-seccion-titulo">Cobros</div>
         <div class="r-fila destacada">
@@ -767,10 +785,7 @@ function renderResumen() {
         </div>
         <div class="r-progress-label">${pagaron} de ${total} pagaron · ${pct}%</div>
       </div>
-
       <hr class="r-divisor">
-
-      <!-- ALUMNOS -->
       <div class="r-seccion">
         <div class="r-seccion-titulo">Alumnos</div>
         <div class="r-fila">
@@ -782,10 +797,7 @@ function renderResumen() {
           <span class="r-fila-valor">${deben}</span>
         </div>
       </div>
-
       <hr class="r-divisor">
-
-      <!-- PLANIFICACIONES -->
       <div class="r-seccion">
         <div class="r-seccion-titulo">Planificaciones</div>
         <div class="r-fila">
@@ -801,39 +813,29 @@ function renderResumen() {
         </div>
         <div class="r-progress-label">${planEnviadas} de ${total} enviadas · ${pctPlan}%</div>
       </div>
-
-    </div>
-  `;
+    </div>`;
 }
 
-function render() {
-  renderAlumnos();
-  renderResumen();
-}
+function render() { renderAlumnos(); renderResumen(); }
 
 // ─── MODAL AGREGAR ───────────────────────────────────────────────────────────
-function abrirModal() {
+window.abrirModal = () => {
   document.getElementById('input-nombre').value = '';
   document.getElementById('overlay').classList.add('open');
   setTimeout(() => document.getElementById('input-nombre').focus(), 120);
-}
+};
+window.cerrarModal = () => document.getElementById('overlay').classList.remove('open');
 
-function cerrarModal() {
-  document.getElementById('overlay').classList.remove('open');
-}
-
-function confirmarAgregar() {
+window.confirmarAgregar = async () => {
   const nombre = document.getElementById('input-nombre').value.trim();
   if (!nombre) { document.getElementById('input-nombre').focus(); return; }
-  agregarAlumno(nombre);
+  await agregarAlumno(nombre);
   cerrarModal();
-  render();
-}
+};
 
 document.getElementById('input-nombre').addEventListener('keydown', e => {
   if (e.key === 'Enter') confirmarAgregar();
 });
-
 document.getElementById('overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('overlay')) cerrarModal();
 });
@@ -841,88 +843,79 @@ document.getElementById('overlay').addEventListener('click', e => {
 // ─── CONFIRM PAGO ────────────────────────────────────────────────────────────
 let _pagoId = null;
 
-function pedirConfirmPago(id, nombre) {
+window.pedirConfirmPago = (id, nombre) => {
   _pagoId = id;
   document.getElementById('confirm-nombre').textContent = nombre;
   document.getElementById('confirm-overlay').classList.add('open');
-}
-
-function cerrarConfirm() {
+};
+window.cerrarConfirm = () => {
   _pagoId = null;
   document.getElementById('confirm-overlay').classList.remove('open');
-}
-
-function ejecutarPago() {
-  if (_pagoId !== null) { pagarAlumno(_pagoId); render(); }
+};
+window.ejecutarPago = async () => {
+  if (_pagoId !== null) await pagarAlumno(_pagoId);
   cerrarConfirm();
-}
+};
 
 // ─── CONFIRM PLAN ────────────────────────────────────────────────────────────
 let _planId = null;
 
-function confirmarPlan(id, nombre) {
+window.confirmarPlan = (id, nombre) => {
   _planId = id;
   document.getElementById('plan-nombre').textContent = nombre;
   document.getElementById('plan-overlay').classList.add('open');
-}
-
-function cerrarPlan() {
+};
+window.cerrarPlan = () => {
   _planId = null;
   document.getElementById('plan-overlay').classList.remove('open');
-}
-
-function ejecutarPlan() {
-  if (_planId !== null) { enviarPlan(_planId); render(); }
+};
+window.ejecutarPlan = async () => {
+  if (_planId !== null) await enviarPlan(_planId);
   cerrarPlan();
-}
+};
 
 // ─── ELIMINAR ────────────────────────────────────────────────────────────────
-function pedirEliminar(id, nombre) {
-  if (confirm(`¿Eliminar a ${nombre}?`)) {
-    eliminarAlumno(id);
-    render();
-  }
-}
+window.pedirEliminar = async (id, nombre) => {
+  if (confirm(`¿Eliminar a ${nombre}?`)) await eliminarAlumno(id);
+};
 
 // ─── TABS ────────────────────────────────────────────────────────────────────
-function cambiarTab(tab) {
+window.cambiarTab = (tab) => {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(tab).classList.add('active');
   document.querySelector(`.tab[onclick="cambiarTab('${tab}')"]`).classList.add('active');
-}
+};
 
 // ─── PRECIO ──────────────────────────────────────────────────────────────────
-function configurarPrecio() {
-  const config = cargarConfig();
-  const nuevo  = prompt('Precio mensual por alumno ($):', config.precio || '');
+window.configurarPrecio = async () => {
+  const nuevo = prompt('Precio mensual por alumno ($):', _config.precio || '');
   if (nuevo === null) return;
-  guardarConfig({ precio: Number(nuevo) });
-  render();
-}
+  await guardarConfig({ precio: Number(nuevo) });
+  renderResumen();
+};
 
 // ─── EXPORT / IMPORT ─────────────────────────────────────────────────────────
-function exportar() {
-  const blob = new Blob([JSON.stringify(cargar(), null, 2)], { type: 'application/json' });
+window.exportar = () => {
+  const blob = new Blob([JSON.stringify(_alumnos, null, 2)], { type: 'application/json' });
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(blob);
   a.download = `runledger_backup_${getMesActual()}.json`;
   a.click();
-}
+};
 
-function importar(e) {
+window.importar = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
-      guardar(JSON.parse(reader.result));
-      render();
+      await guardarAlumnos(JSON.parse(reader.result));
     } catch { alert('Archivo inválido.'); }
   };
   reader.readAsText(file);
   e.target.value = '';
-}
+};
 
 // ─── UTIL ────────────────────────────────────────────────────────────────────
 function esc(s) {
@@ -931,8 +924,19 @@ function esc(s) {
   return d.innerHTML;
 }
 
-// ─── INIT ────────────────────────────────────────────────────────────────────
-render();
+// ─── ESCUCHA EN TIEMPO REAL ──────────────────────────────────────────────────
+// Alumnos: se actualiza en todos los dispositivos automáticamente
+onSnapshot(REF_ALUMNOS, (snap) => {
+  _alumnos = snap.exists() ? (snap.data().lista || []) : [];
+  _listo   = true;
+  render();
+});
+
+// Config: precio
+onSnapshot(REF_CONFIG, (snap) => {
+  _config = snap.exists() ? snap.data() : { precio: 0 };
+  renderResumen();
+});
 </script>
 </body>
 </html>

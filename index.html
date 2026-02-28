@@ -525,14 +525,42 @@ header {
 </head>
 <body>
 
-<header>
+<!-- LOGIN -->
+<div id="login-screen" style="
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; padding:20px;">
+  <div style="
+    background:#1c1c1c; border:1px solid #333; border-radius:18px;
+    padding:36px 28px; width:100%; max-width:360px;">
+    <div style="font-size:1.2rem;font-weight:700;margin-bottom:6px;">RunLedger</div>
+    <div style="font-size:.88rem;color:#999;margin-bottom:28px;">Ingresá para continuar</div>
+    <input id="login-email" type="email" placeholder="Email"
+      style="width:100%;background:#111;border:1px solid #333;border-radius:10px;
+             padding:14px 16px;font-family:'Literata',serif;font-size:1rem;
+             color:#f0f0f0;outline:none;margin-bottom:12px;" />
+    <input id="login-pass" type="password" placeholder="Contraseña"
+      style="width:100%;background:#111;border:1px solid #333;border-radius:10px;
+             padding:14px 16px;font-family:'Literata',serif;font-size:1rem;
+             color:#f0f0f0;outline:none;margin-bottom:8px;" />
+    <div id="login-error" style="color:#f87171;font-size:.82rem;min-height:20px;margin-bottom:12px;"></div>
+    <button id="login-btn" style="
+      width:100%;background:#f0f0f0;color:#111;border:none;border-radius:10px;
+      padding:15px;font-family:'Literata',serif;font-size:1rem;font-weight:700;cursor:pointer;">
+      Entrar
+    </button>
+  </div>
+</div>
+
+<!-- APP (oculta hasta autenticar) -->
+<div id="app-screen" style="display:none;">
   <div class="topbar">
     <span class="app-name">RUNLEDGER</span>
     <div class="header-actions">
       <button class="icon-btn" id="btn-precio">⚙ Precio</button>
       <button class="icon-btn" id="btn-exportar">↓ Export</button>
       <button class="icon-btn" id="btn-importar">↑ Import</button>
-      <input type="file" id="importFile" hidden accept=".json" onchange="importar(event)">
+      <button class="icon-btn" id="btn-salir" style="color:#f87171;">Salir</button>
+      <input type="file" id="importFile" hidden accept=".json">
     </div>
   </div>
   <div class="tabs">
@@ -590,10 +618,13 @@ header {
     </div>
   </div>
 </div>
+</div><!-- /app-screen -->
 
 <script type="module">
-import { initializeApp }                       from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
 import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getAuth, signInWithEmailAndPassword,
+         onAuthStateChanged, signOut }            from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js';
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const firebaseConfig = {
@@ -605,7 +636,9 @@ const firebaseConfig = {
   appId:             "1:465777579099:web:180da05212713cd0101b7e"
 };
 
-const db          = getFirestore(initializeApp(firebaseConfig));
+const app         = initializeApp(firebaseConfig);
+const db          = getFirestore(app);
+const auth        = getAuth(app);
 const REF_ALUMNOS = doc(db, 'runledger', 'alumnos');
 const REF_CONFIG  = doc(db, 'runledger', 'config');
 
@@ -898,6 +931,24 @@ function importar(e) {
 
 // ─── EVENT LISTENERS ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+
+  // Login
+  const doLogin = async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-pass').value;
+    document.getElementById('login-error').textContent = '';
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch(e) {
+      document.getElementById('login-error').textContent = 'Email o contraseña incorrectos.';
+    }
+  };
+  document.getElementById('login-btn')?.addEventListener('click', doLogin);
+  document.getElementById('login-pass')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // App
   document.getElementById('btn-agregar')    ?.addEventListener('click', abrirModal);
   document.getElementById('btn-cancelar')   ?.addEventListener('click', cerrarModal);
   document.getElementById('btn-confirmar')  ?.addEventListener('click', confirmarAgregar);
@@ -905,14 +956,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-exportar')   ?.addEventListener('click', exportar);
   document.getElementById('btn-importar')   ?.addEventListener('click', () => document.getElementById('importFile').click());
   document.getElementById('importFile')     ?.addEventListener('change', importar);
+  document.getElementById('btn-salir')      ?.addEventListener('click', () => signOut(auth));
   document.getElementById('tab-alumnos')    ?.addEventListener('click', () => cambiarTab('alumnos'));
   document.getElementById('tab-resumen')    ?.addEventListener('click', () => cambiarTab('resumen'));
   document.getElementById('confirm-si-pago')?.addEventListener('click', ejecutarPago);
   document.getElementById('confirm-no-pago')?.addEventListener('click', cerrarConfirmPago);
   document.getElementById('confirm-si-plan')?.addEventListener('click', ejecutarPlan);
   document.getElementById('confirm-no-plan')?.addEventListener('click', cerrarConfirmPlan);
-
-  document.getElementById('input-nombre')?.addEventListener('keydown', e => {
+  document.getElementById('input-nombre')   ?.addEventListener('keydown', e => {
     if (e.key === 'Enter') confirmarAgregar();
   });
   document.getElementById('overlay')?.addEventListener('click', e => {
@@ -920,8 +971,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('buscar')?.addEventListener('input', renderAlumnos);
 
-  // Delegación de eventos para botones de cards (generados dinámicamente)
-  document.getElementById('lista')?.addEventListener('click', async e => {
+  // Delegación para cards dinámicas
+  document.getElementById('lista')?.addEventListener('click', e => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const { action, id, nombre } = btn.dataset;
@@ -932,15 +983,40 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ─── TIEMPO REAL FIRESTORE ───────────────────────────────────────────────────
-onSnapshot(REF_ALUMNOS, snap => {
-  _alumnos = snap.exists() ? (snap.data().lista || []) : [];
-  _listo   = true;
-  render();
-});
-onSnapshot(REF_CONFIG, snap => {
-  _config = snap.exists() ? snap.data() : { precio: 0 };
-  renderResumen();
+// ─── AUTH STATE ──────────────────────────────────────────────────────────────
+let _unsubAlumnos = null;
+let _unsubConfig  = null;
+
+onAuthStateChanged(auth, user => {
+  const loginScreen = document.getElementById('login-screen');
+  const appScreen   = document.getElementById('app-screen');
+
+  if (user) {
+    // Autenticado: mostrar app, ocultar login
+    loginScreen.style.display = 'none';
+    appScreen.style.display   = 'block';
+
+    // Iniciar escucha en tiempo real
+    _unsubAlumnos = onSnapshot(REF_ALUMNOS, snap => {
+      _alumnos = snap.exists() ? (snap.data().lista || []) : [];
+      _listo   = true;
+      render();
+    });
+    _unsubConfig = onSnapshot(REF_CONFIG, snap => {
+      _config = snap.exists() ? snap.data() : { precio: 0 };
+      renderResumen();
+    });
+
+  } else {
+    // No autenticado: mostrar login, ocultar app
+    loginScreen.style.display = 'flex';
+    appScreen.style.display   = 'none';
+    _listo = false;
+
+    // Cancelar escuchas activas
+    if (_unsubAlumnos) { _unsubAlumnos(); _unsubAlumnos = null; }
+    if (_unsubConfig)  { _unsubConfig();  _unsubConfig  = null; }
+  }
 });
 </script>
 </body>

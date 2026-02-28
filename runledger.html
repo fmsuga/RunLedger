@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunLedger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #111111;
+  --surface:  #1c1c1c;
+  --surface2: #242424;
+  --border:   #333;
+  --text:     #f0f0f0;
+  --muted:    #999;
+  --green:    #4ade80;
+  --yellow:   #fbbf24;
+  --red:      #f87171;
+  --accent:   #f0f0f0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Literata', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.5;
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 16px 18px 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.app-name {
+  font-family: 'Literata', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--text);
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: .82rem;
+  font-family: 'Literata', serif;
+  cursor: pointer;
+  transition: background .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.icon-btn:hover { background: var(--surface2); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  font-size: .95rem;
+  font-family: 'Literata', serif;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color .2s, border-color .2s;
+  user-select: none;
+}
+
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+/* ── SECTIONS ── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── LISTA ALUMNOS ── */
+#lista {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  animation: fadeUp .2s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Punto de estado */
+.indicador {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.verde    { background: var(--green); }
+.amarillo { background: var(--yellow); }
+.rojo     { background: var(--red); }
+
+/* Nombre */
+.nombre {
+  flex: 1;
+  font-size: 1.05rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Botones de acción en fila */
+.card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.card-btn {
+  width: 110px;
+  padding: 9px 0;
+  border-radius: 8px;
+  border: none;
+  font-family: 'Literata', serif;
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+  white-space: nowrap;
+  text-align: center;
+}
+.card-btn:active { transform: scale(.95); }
+
+/* Pago */
+.card-btn.pagar { background: rgba(74,222,128,.18); color: var(--green); }
+.card-btn.pagar:hover { opacity: .8; }
+.card-btn.pagar.done {
+  background: #222;
+  color: #444;
+  cursor: default;
+}
+.card-btn.pagar.done:hover { opacity: 1; }
+
+/* Plan */
+.card-btn.plan { background: rgba(167,139,250,.18); color: #c4b5fd; }
+.card-btn.plan:hover { opacity: .8; }
+.card-btn.plan.done {
+  background: #222;
+  color: #444;
+  cursor: default;
+}
+.card-btn.plan.done:hover { opacity: 1; }
+
+/* Eliminar */
+.card-btn.eliminar {
+  width: auto;
+  padding: 9px 12px;
+  background: transparent;
+  color: #444;
+  font-weight: 400;
+  font-size: .8rem;
+}
+.card-btn.eliminar:hover { color: var(--red); }
+
+/* ── BUSCADOR ── */
+.buscar-wrap {
+  padding: 12px 16px 4px;
+}
+
+#buscar {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-family: 'Literata', serif;
+  font-size: 1rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color .2s;
+}
+#buscar:focus { border-color: #555; }
+#buscar::placeholder { color: var(--muted); }
+#buscar::-webkit-search-cancel-button { cursor: pointer; }
+.empty {
+  text-align: center;
+  padding: 70px 24px;
+  color: var(--muted);
+  font-size: 1rem;
+}
+.empty-icon { font-size: 2.4rem; display: block; margin-bottom: 12px; }
+
+/* ── FAB ── */
+#btn-agregar {
+  position: fixed;
+  bottom: 22px;
+  right: 18px;
+  background: var(--accent);
+  color: #111;
+  border: none;
+  border-radius: 16px;
+  padding: 16px 24px;
+  font-family: 'Literata', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 28px rgba(0,0,0,.55);
+  transition: transform .15s, box-shadow .15s;
+  z-index: 30;
+}
+#btn-agregar:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.65); }
+#btn-agregar:active { transform: scale(.97); }
+
+/* ── RESUMEN ── */
+#resumen-content {
+  padding: 20px 16px 40px;
+}
+
+/* Hoja de papel */
+.resumen-papel {
+  background: #f9f8f6;
+  border-radius: 16px;
+  padding: 28px 24px 32px;
+  color: #1a1a1a;
+  box-shadow: 0 2px 16px rgba(0,0,0,.35);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Línea decorativa superior tipo membrete */
+.resumen-papel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #1a1a1a 60%, transparent);
+}
+
+/* Cabecera del papel */
+.r-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid #1a1a1a;
+}
+
+.r-header-left {}
+
+.r-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.r-subtitulo {
+  font-size: .82rem;
+  color: #888;
+  margin-top: 3px;
+}
+
+.r-header-right {
+  text-align: right;
+}
+
+.r-mes {
+  font-size: .78rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.r-mes-valor {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-top: 2px;
+}
+
+/* Sección dentro del papel */
+.r-seccion {
+  margin-bottom: 24px;
+}
+
+.r-seccion-titulo {
+  font-size: .7rem;
+  font-weight: 700;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 10px;
+}
+
+.r-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid #e8e6e1;
+}
+.r-fila:last-of-type { border-bottom: none; }
+
+.r-fila-label {
+  font-size: .95rem;
+  color: #555;
+}
+
+.r-fila-valor {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Colores sobre fondo blanco — bien contrastados */
+.r-fila-valor.verde    { color: #16a34a; }
+.r-fila-valor.rojo     { color: #dc2626; }
+.r-fila-valor.amarillo { color: #b45309; }
+.r-fila-valor.violeta  { color: #7c3aed; }
+
+/* Fila destacada (ingreso real) */
+.r-fila.destacada .r-fila-label {
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 1rem;
+}
+.r-fila.destacada .r-fila-valor {
+  font-size: 1.25rem;
+}
+
+/* Barra de progreso sobre papel */
+.r-progress-wrap {
+  background: #e0ddd8;
+  border-radius: 99px;
+  height: 5px;
+  margin: 14px 0 5px;
+  overflow: hidden;
+}
+.r-progress-bar {
+  height: 100%;
+  border-radius: 99px;
+  transition: width .5s ease;
+}
+.r-progress-label {
+  font-size: .75rem;
+  color: #999;
+  text-align: right;
+}
+
+/* Divisor entre secciones */
+.r-divisor {
+  border: none;
+  border-top: 1px dashed #d0cdc8;
+  margin: 20px 0;
+}
+
+/* ── MODAL ── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 40;
+  align-items: flex-end;
+  justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  padding: 30px 20px 40px;
+  width: 100%;
+  max-width: 500px;
+  animation: slideUp .25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-title {
+  font-family: 'DM Mono', monospace;
+  font-size: .9rem;
+  letter-spacing: .08em;
+  margin-bottom: 20px;
+}
+
+.modal input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  font-family: 'Literata', serif;
+  font-size: 1.05rem;
+  color: var(--text);
+  outline: none;
+  margin-bottom: 16px;
+  transition: border-color .2s;
+}
+.modal input:focus { border-color: #555; }
+.modal input::placeholder { color: var(--muted); }
+
+.modal-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modal-btns button {
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Literata', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.modal-btns button:hover { opacity: .85; }
+
+#btn-confirmar { background: var(--accent); color: #111; }
+#btn-cancelar  { background: var(--border);  color: var(--text); }
+
+/* ── CONFIRM MODAL ── */
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.8);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.confirm-overlay.open { display: flex; }
+
+.confirm-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  animation: popIn .2s ease;
+}
+
+@keyframes popIn {
+  from { transform: scale(.92); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.confirm-icon  { font-size: 2rem; margin-bottom: 12px; }
+.confirm-msg   { font-size: 1.05rem; line-height: 1.5; margin-bottom: 24px; }
+.confirm-name  { font-weight: 700; color: var(--green); }
+
+.confirm-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.confirm-btns button {
+  padding: 15px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Literata', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#confirm-si  { background: var(--green);  color: #111; }
+#confirm-no  { background: var(--border); color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <span class="app-name">RUNLEDGER</span>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="configurarPrecio()">⚙ Precio</button>
+      <button class="icon-btn" onclick="exportar()">↓ Export</button>
+      <button class="icon-btn" onclick="document.getElementById('importFile').click()">↑ Import</button>
+      <input type="file" id="importFile" hidden accept=".json" onchange="importar(event)">
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="cambiarTab('alumnos')">Alumnos</div>
+    <div class="tab"        onclick="cambiarTab('resumen')">Resumen</div>
+  </div>
+</header>
+
+<!-- ALUMNOS -->
+<div id="alumnos" class="section active">
+  <div class="buscar-wrap">
+    <input type="search" id="buscar" placeholder="Buscar alumno..." oninput="renderAlumnos()" autocomplete="off" />
+  </div>
+  <div id="lista"></div>
+  <button id="btn-agregar" onclick="abrirModal()">+ Nuevo alumno</button>
+</div>
+
+<!-- RESUMEN -->
+<div id="resumen" class="section">
+  <div id="resumen-content"></div>
+</div>
+
+<!-- Modal agregar -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title">NUEVO ALUMNO</div>
+    <input type="text" id="input-nombre" placeholder="Nombre completo" maxlength="60" />
+    <div class="modal-btns">
+      <button id="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+      <button id="btn-confirmar" onclick="confirmarAgregar()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirm pago -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">✅</div>
+    <div class="confirm-msg">¿Confirmás el pago de<br><span class="confirm-name" id="confirm-nombre"></span>?</div>
+    <div class="confirm-btns">
+      <button id="confirm-no"  onclick="cerrarConfirm()">No</button>
+      <button id="confirm-si"  onclick="ejecutarPago()">Sí, pagó</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirm planificación -->
+<div class="confirm-overlay" id="plan-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">📋</div>
+    <div class="confirm-msg">¿Confirmás que enviaste la planificación de<br><span class="confirm-name" id="plan-nombre"></span>?</div>
+    <div class="confirm-btns">
+      <button id="confirm-no" onclick="cerrarPlan()">No</button>
+      <button style="background:#a78bfa;color:#111;padding:15px;border-radius:12px;border:none;font-family:'Literata',serif;font-size:1rem;font-weight:700;cursor:pointer;" onclick="ejecutarPlan()">Sí, enviada</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STORAGE ──────────────────────────────────────────────────────────────────
+const KEY_DATA   = 'runledger_alumnos';
+const KEY_CONFIG = 'runledger_config';
+
+const cargar       = () => JSON.parse(localStorage.getItem(KEY_DATA))   || [];
+const guardar      = d => localStorage.setItem(KEY_DATA, JSON.stringify(d));
+const cargarConfig = () => JSON.parse(localStorage.getItem(KEY_CONFIG)) || { precio: 0 };
+const guardarConfig= c => localStorage.setItem(KEY_CONFIG, JSON.stringify(c));
+
+// ─── TIEMPO ──────────────────────────────────────────────────────────────────
+function getMesActual() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+const getDia = () => new Date().getDate();
+
+function formatMesLabel(ym) {
+  if (!ym) return 'sin pagos';
+  const [y, m] = ym.split('-');
+  const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return `${nombres[+m-1]} ${y}`;
+}
+
+// ─── ESTADO ──────────────────────────────────────────────────────────────────
+function getEstado(a) {
+  if (a.ultimoMesPagado === getMesActual()) return 'verde';
+  return getDia() <= 10 ? 'amarillo' : 'rojo';
+}
+
+const ESTADO_LABEL = { verde: 'Al día', amarillo: 'Pendiente', rojo: 'Vencido' };
+const ESTADO_ORDER = { rojo: 0, amarillo: 1, verde: 2 };
+
+// ─── DATOS ───────────────────────────────────────────────────────────────────
+function agregarAlumno(nombre) {
+  const data = cargar();
+  data.push({
+    id: Date.now(),
+    nombre: nombre.trim(),
+    fechaAlta: new Date().toISOString().slice(0,10),
+    ultimoMesPagado: null,
+    ultimoPlanMes: null
+  });
+  guardar(data);
+}
+
+function eliminarAlumno(id) {
+  guardar(cargar().filter(a => a.id !== id));
+}
+
+function pagarAlumno(id) {
+  const data = cargar();
+  const a = data.find(x => x.id === id);
+  if (!a || a.ultimoMesPagado === getMesActual()) return;
+  a.ultimoMesPagado = getMesActual();
+  guardar(data);
+}
+
+function enviarPlan(id) {
+  const data = cargar();
+  const a = data.find(x => x.id === id);
+  if (!a || a.ultimoPlanMes === getMesActual()) return;
+  a.ultimoPlanMes = getMesActual();
+  guardar(data);
+}
+
+// ─── RENDER ALUMNOS ──────────────────────────────────────────────────────────
+function renderAlumnos() {
+  const data  = cargar();
+  const lista = document.getElementById('lista');
+  const mes   = getMesActual();
+
+  if (!data.length) {
+    lista.innerHTML = `<div class="empty">
+      <span class="empty-icon">📋</span>
+      No hay alumnos todavía.<br>Agregá el primero abajo.
+    </div>`;
+    return;
+  }
+
+  const query  = (document.getElementById('buscar')?.value || '').toLowerCase().trim();
+  const sorted = [...data]
+    .filter(a => !query || a.nombre.toLowerCase().includes(query))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+  if (!sorted.length) {
+    lista.innerHTML = `<div class="empty">
+      <span class="empty-icon">🔍</span>
+      No se encontró "${esc(query)}"
+    </div>`;
+    return;
+  }
+
+  lista.innerHTML = sorted.map(a => {
+    const est         = getEstado(a);
+    const pagado      = a.ultimoMesPagado === mes;
+    const planEnviada = (a.ultimoPlanMes || null) === mes;
+
+    return `
+      <div class="card">
+        <div class="indicador ${est}"></div>
+        <span class="nombre">${esc(a.nombre)}</span>
+        <div class="card-actions">
+          <button class="card-btn pagar ${pagado ? 'done' : ''}"
+            onclick="${pagado ? '' : `pedirConfirmPago(${a.id}, '${esc(a.nombre)}')`}">
+            ${pagado ? 'Pagado' : 'Pago'}
+          </button>
+          <button class="card-btn plan ${planEnviada ? 'done' : ''}"
+            onclick="${planEnviada ? '' : `confirmarPlan(${a.id}, '${esc(a.nombre)}')`}">
+            ${planEnviada ? 'Plan ✔' : 'Planificación'}
+          </button>
+          <button class="card-btn eliminar"
+            onclick="pedirEliminar(${a.id}, '${esc(a.nombre)}')">
+            Eliminar
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─── RENDER RESUMEN ──────────────────────────────────────────────────────────
+function renderResumen() {
+  const data   = cargar();
+  const config = cargarConfig();
+  const precio = config.precio || 0;
+  const mes    = getMesActual();
+
+  const total        = data.length;
+  const pagaron      = data.filter(a => a.ultimoMesPagado === mes).length;
+  const deben        = total - pagaron;
+  const planEnviadas = data.filter(a => (a.ultimoPlanMes || null) === mes).length;
+  const planPend     = total - planEnviadas;
+  const esperado     = total   * precio;
+  const ingresado    = pagaron * precio;
+  const faltante     = esperado - ingresado;
+  const pct          = total ? Math.round((pagaron      / total) * 100) : 0;
+  const pctPlan      = total ? Math.round((planEnviadas / total) * 100) : 0;
+
+  const $ = n => precio > 0 ? '$' + n.toLocaleString('es-AR') : '—';
+
+  document.getElementById('resumen-content').innerHTML = `
+    <div class="resumen-papel">
+
+      <!-- MEMBRETE -->
+      <div class="r-header">
+        <div class="r-header-left">
+          <div class="r-titulo">Resumen mensual</div>
+          <div class="r-subtitulo">${total} alumno${total !== 1 ? 's' : ''} registrado${total !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="r-header-right">
+          <div class="r-mes">Período</div>
+          <div class="r-mes-valor">${formatMesLabel(mes)}</div>
+        </div>
+      </div>
+
+      <!-- COBROS -->
+      <div class="r-seccion">
+        <div class="r-seccion-titulo">Cobros</div>
+        <div class="r-fila destacada">
+          <span class="r-fila-label">Ingreso real</span>
+          <span class="r-fila-valor">${$(ingresado)}</span>
+        </div>
+        <div class="r-fila">
+          <span class="r-fila-label">Ingreso esperado</span>
+          <span class="r-fila-valor">${$(esperado)}</span>
+        </div>
+        <div class="r-fila">
+          <span class="r-fila-label">Faltante</span>
+          <span class="r-fila-valor">${$(faltante)}</span>
+        </div>
+        <div class="r-progress-wrap">
+          <div class="r-progress-bar" style="width:${pct}%;background:#16a34a"></div>
+        </div>
+        <div class="r-progress-label">${pagaron} de ${total} pagaron · ${pct}%</div>
+      </div>
+
+      <hr class="r-divisor">
+
+      <!-- ALUMNOS -->
+      <div class="r-seccion">
+        <div class="r-seccion-titulo">Alumnos</div>
+        <div class="r-fila">
+          <span class="r-fila-label">Al día</span>
+          <span class="r-fila-valor">${pagaron}</span>
+        </div>
+        <div class="r-fila">
+          <span class="r-fila-label">Deben</span>
+          <span class="r-fila-valor">${deben}</span>
+        </div>
+      </div>
+
+      <hr class="r-divisor">
+
+      <!-- PLANIFICACIONES -->
+      <div class="r-seccion">
+        <div class="r-seccion-titulo">Planificaciones</div>
+        <div class="r-fila">
+          <span class="r-fila-label">Enviadas</span>
+          <span class="r-fila-valor">${planEnviadas}</span>
+        </div>
+        <div class="r-fila">
+          <span class="r-fila-label">Pendientes</span>
+          <span class="r-fila-valor">${planPend}</span>
+        </div>
+        <div class="r-progress-wrap">
+          <div class="r-progress-bar" style="width:${pctPlan}%;background:#7c3aed"></div>
+        </div>
+        <div class="r-progress-label">${planEnviadas} de ${total} enviadas · ${pctPlan}%</div>
+      </div>
+
+    </div>
+  `;
+}
+
+function render() {
+  renderAlumnos();
+  renderResumen();
+}
+
+// ─── MODAL AGREGAR ───────────────────────────────────────────────────────────
+function abrirModal() {
+  document.getElementById('input-nombre').value = '';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('input-nombre').focus(), 120);
+}
+
+function cerrarModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function confirmarAgregar() {
+  const nombre = document.getElementById('input-nombre').value.trim();
+  if (!nombre) { document.getElementById('input-nombre').focus(); return; }
+  agregarAlumno(nombre);
+  cerrarModal();
+  render();
+}
+
+document.getElementById('input-nombre').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmarAgregar();
+});
+
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) cerrarModal();
+});
+
+// ─── CONFIRM PAGO ────────────────────────────────────────────────────────────
+let _pagoId = null;
+
+function pedirConfirmPago(id, nombre) {
+  _pagoId = id;
+  document.getElementById('confirm-nombre').textContent = nombre;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function cerrarConfirm() {
+  _pagoId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+function ejecutarPago() {
+  if (_pagoId !== null) { pagarAlumno(_pagoId); render(); }
+  cerrarConfirm();
+}
+
+// ─── CONFIRM PLAN ────────────────────────────────────────────────────────────
+let _planId = null;
+
+function confirmarPlan(id, nombre) {
+  _planId = id;
+  document.getElementById('plan-nombre').textContent = nombre;
+  document.getElementById('plan-overlay').classList.add('open');
+}
+
+function cerrarPlan() {
+  _planId = null;
+  document.getElementById('plan-overlay').classList.remove('open');
+}
+
+function ejecutarPlan() {
+  if (_planId !== null) { enviarPlan(_planId); render(); }
+  cerrarPlan();
+}
+
+// ─── ELIMINAR ────────────────────────────────────────────────────────────────
+function pedirEliminar(id, nombre) {
+  if (confirm(`¿Eliminar a ${nombre}?`)) {
+    eliminarAlumno(id);
+    render();
+  }
+}
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function cambiarTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  document.querySelector(`.tab[onclick="cambiarTab('${tab}')"]`).classList.add('active');
+}
+
+// ─── PRECIO ──────────────────────────────────────────────────────────────────
+function configurarPrecio() {
+  const config = cargarConfig();
+  const nuevo  = prompt('Precio mensual por alumno ($):', config.precio || '');
+  if (nuevo === null) return;
+  guardarConfig({ precio: Number(nuevo) });
+  render();
+}
+
+// ─── EXPORT / IMPORT ─────────────────────────────────────────────────────────
+function exportar() {
+  const blob = new Blob([JSON.stringify(cargar(), null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `runledger_backup_${getMesActual()}.json`;
+  a.click();
+}
+
+function importar(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      guardar(JSON.parse(reader.result));
+      render();
+    } catch { alert('Archivo inválido.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── UTIL ────────────────────────────────────────────────────────────────────
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

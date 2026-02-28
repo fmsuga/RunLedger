@@ -527,17 +527,17 @@ header {
 
 <header>
   <div class="topbar">
-    <span class="app-name">RUNLEDGER</span>
+    <span class="app-name">Deltarunners - Alumnos</span>
     <div class="header-actions">
-      <button class="icon-btn" onclick="configurarPrecio()">⚙ Precio</button>
-      <button class="icon-btn" onclick="exportar()">↓ Export</button>
-      <button class="icon-btn" onclick="document.getElementById('importFile').click()">↑ Import</button>
+      <button class="icon-btn" id="btn-precio">⚙ Precio</button>
+      <button class="icon-btn" id="btn-exportar">↓ Export</button>
+      <button class="icon-btn" id="btn-importar">↑ Import</button>
       <input type="file" id="importFile" hidden accept=".json" onchange="importar(event)">
     </div>
   </div>
   <div class="tabs">
-    <div class="tab active" onclick="cambiarTab('alumnos')">Alumnos</div>
-    <div class="tab"        onclick="cambiarTab('resumen')">Resumen</div>
+    <div class="tab active" id="tab-alumnos">Alumnos</div>
+    <div class="tab"        id="tab-resumen">Resumen</div>
   </div>
 </header>
 
@@ -547,7 +547,7 @@ header {
     <input type="search" id="buscar" placeholder="Buscar alumno..." oninput="renderAlumnos()" autocomplete="off" />
   </div>
   <div id="lista"></div>
-  <button id="btn-agregar" onclick="abrirModal()">+ Nuevo alumno</button>
+  <button id="btn-agregar">+ Nuevo alumno</button>
 </div>
 
 <!-- RESUMEN -->
@@ -561,8 +561,8 @@ header {
     <div class="modal-title">NUEVO ALUMNO</div>
     <input type="text" id="input-nombre" placeholder="Nombre completo" maxlength="60" />
     <div class="modal-btns">
-      <button id="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
-      <button id="btn-confirmar" onclick="confirmarAgregar()">Agregar</button>
+      <button id="btn-cancelar" id="btn-cancelar">Cancelar</button>
+      <button id="btn-confirmar" id="btn-confirmar">Agregar</button>
     </div>
   </div>
 </div>
@@ -573,8 +573,8 @@ header {
     <div class="confirm-icon">✅</div>
     <div class="confirm-msg">¿Confirmás el pago de<br><span class="confirm-name" id="confirm-nombre"></span>?</div>
     <div class="confirm-btns">
-      <button id="confirm-no"  onclick="cerrarConfirm()">No</button>
-      <button id="confirm-si"  onclick="ejecutarPago()">Sí, pagó</button>
+      <button id="confirm-no"  id="confirm-no-pago">No</button>
+      <button id="confirm-si"  id="confirm-si-pago">Sí, pagó</button>
     </div>
   </div>
 </div>
@@ -585,8 +585,8 @@ header {
     <div class="confirm-icon">📋</div>
     <div class="confirm-msg">¿Confirmás que enviaste la planificación de<br><span class="confirm-name" id="plan-nombre"></span>?</div>
     <div class="confirm-btns">
-      <button id="confirm-no" onclick="cerrarPlan()">No</button>
-      <button style="background:#a78bfa;color:#111;padding:15px;border-radius:12px;border:none;font-family:'Literata',serif;font-size:1rem;font-weight:700;cursor:pointer;" onclick="ejecutarPlan()">Sí, enviada</button>
+      <button id="confirm-no" id="confirm-no-plan">No</button>
+      <button style="background:#a78bfa;color:#111;padding:15px;border-radius:12px;border:none;font-family:'Literata',serif;font-size:1rem;font-weight:700;cursor:pointer;" id="confirm-si-plan">Sí, enviada</button>
     </div>
   </div>
 </div>
@@ -819,26 +819,46 @@ function renderResumen() {
 function render() { renderAlumnos(); renderResumen(); }
 
 // ─── MODAL AGREGAR ───────────────────────────────────────────────────────────
-window.abrirModal = () => {
+abrirModal = () => {
   document.getElementById('input-nombre').value = '';
   document.getElementById('overlay').classList.add('open');
   setTimeout(() => document.getElementById('input-nombre').focus(), 120);
 };
-window.cerrarModal = () => document.getElementById('overlay').classList.remove('open');
+cerrarModal = () => document.getElementById('overlay').classList.remove('open');
 
-window.confirmarAgregar = async () => {
+confirmarAgregar = async () => {
   const nombre = document.getElementById('input-nombre').value.trim();
   if (!nombre) { document.getElementById('input-nombre').focus(); return; }
   await agregarAlumno(nombre);
   cerrarModal();
 };
 
-document.getElementById('input-nombre').addEventListener('keydown', e => {
+// ─── EVENT LISTENERS (necesarios por type="module") ─────────────────────────
+document.getElementById('btn-importar') ?.addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('btn-precio')   ?.addEventListener('click', configurarPrecio);
+document.getElementById('btn-exportar') ?.addEventListener('click', exportar);
+document.getElementById('importFile')   ?.addEventListener('change', importar);
+document.getElementById('btn-agregar')  ?.addEventListener('click', abrirModal);
+document.getElementById('btn-cancelar') ?.addEventListener('click', cerrarModal);
+document.getElementById('btn-confirmar')?.addEventListener('click', confirmarAgregar);
+document.getElementById('confirm-no-pago') ?.addEventListener('click', cerrarConfirm);
+document.getElementById('confirm-si-pago') ?.addEventListener('click', ejecutarPago);
+document.getElementById('confirm-si-plan') ?.addEventListener('click', ejecutarPlan);
+document.getElementById('confirm-no-plan') ?.addEventListener('click', cerrarPlan);
+document.getElementById('tab-alumnos') ?.addEventListener('click', () => cambiarTab('alumnos'));
+document.getElementById('tab-resumen') ?.addEventListener('click', () => cambiarTab('resumen'));
+
+document.getElementById('input-nombre')?.addEventListener('keydown', e => {
   if (e.key === 'Enter') confirmarAgregar();
 });
-document.getElementById('overlay').addEventListener('click', e => {
+document.getElementById('overlay')?.addEventListener('click', e => {
   if (e.target === document.getElementById('overlay')) cerrarModal();
 });
+
+// Exponer al scope global solo las funciones llamadas desde HTML dinámico (cards)
+window.pedirConfirmPago = pedirConfirmPago;
+window.confirmarPlan    = confirmarPlan;
+window.pedirEliminar    = pedirEliminar;
 
 // ─── CONFIRM PAGO ────────────────────────────────────────────────────────────
 let _pagoId = null;
@@ -848,11 +868,11 @@ window.pedirConfirmPago = (id, nombre) => {
   document.getElementById('confirm-nombre').textContent = nombre;
   document.getElementById('confirm-overlay').classList.add('open');
 };
-window.cerrarConfirm = () => {
+cerrarConfirm = () => {
   _pagoId = null;
   document.getElementById('confirm-overlay').classList.remove('open');
 };
-window.ejecutarPago = async () => {
+ejecutarPago = async () => {
   if (_pagoId !== null) await pagarAlumno(_pagoId);
   cerrarConfirm();
 };
@@ -865,11 +885,11 @@ window.confirmarPlan = (id, nombre) => {
   document.getElementById('plan-nombre').textContent = nombre;
   document.getElementById('plan-overlay').classList.add('open');
 };
-window.cerrarPlan = () => {
+cerrarPlan = () => {
   _planId = null;
   document.getElementById('plan-overlay').classList.remove('open');
 };
-window.ejecutarPlan = async () => {
+ejecutarPlan = async () => {
   if (_planId !== null) await enviarPlan(_planId);
   cerrarPlan();
 };
@@ -880,15 +900,15 @@ window.pedirEliminar = async (id, nombre) => {
 };
 
 // ─── TABS ────────────────────────────────────────────────────────────────────
-window.cambiarTab = (tab) => {
+cambiarTab = (tab) => {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(tab).classList.add('active');
-  document.querySelector(`.tab[onclick="cambiarTab('${tab}')"]`).classList.add('active');
+  document.getElementById('tab-' + tab)?.classList.add('active');
 };
 
 // ─── PRECIO ──────────────────────────────────────────────────────────────────
-window.configurarPrecio = async () => {
+configurarPrecio = async () => {
   const nuevo = prompt('Precio mensual por alumno ($):', _config.precio || '');
   if (nuevo === null) return;
   await guardarConfig({ precio: Number(nuevo) });
@@ -896,7 +916,7 @@ window.configurarPrecio = async () => {
 };
 
 // ─── EXPORT / IMPORT ─────────────────────────────────────────────────────────
-window.exportar = () => {
+exportar = () => {
   const blob = new Blob([JSON.stringify(_alumnos, null, 2)], { type: 'application/json' });
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(blob);
@@ -904,7 +924,7 @@ window.exportar = () => {
   a.click();
 };
 
-window.importar = async (e) => {
+importar = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();

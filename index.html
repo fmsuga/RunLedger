@@ -234,6 +234,62 @@ header {
 }
 .empty-icon { font-size: 2.4rem; display: block; margin-bottom: 12px; }
 
+/* ── BANNER CUMPLEAÑOS ── */
+#birthday-banner {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #111;
+  border-radius: 16px;
+  padding: 14px 20px 14px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.55);
+  max-width: calc(100vw - 32px);
+  min-width: 280px;
+  animation: bannerIn .35s cubic-bezier(.22,1,.36,1) both;
+}
+#birthday-banner.visible { display: flex; align-items: flex-start; gap: 12px; }
+@keyframes bannerIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.banner-icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1.2; }
+.banner-body { flex: 1; }
+.banner-title { font-weight: 700; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 3px; }
+.banner-names { font-size: .98rem; font-weight: 600; line-height: 1.5; }
+.banner-close {
+  background: rgba(0,0,0,.15);
+  border: none;
+  color: #111;
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: background .15s;
+}
+.banner-close:hover { background: rgba(0,0,0,.25); }
+.banner-progress {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: rgba(0,0,0,.2);
+  border-radius: 0 0 16px 16px;
+  animation: bannerProgress linear forwards;
+}
+@keyframes bannerProgress {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
 /* ── FAB ── */
 #btn-agregar {
   position: fixed;
@@ -588,6 +644,7 @@ header {
   <div class="modal">
     <div class="modal-title">NUEVO ALUMNO</div>
     <input type="text" id="input-nombre" placeholder="Nombre completo" maxlength="60" />
+    <input type="date" id="input-nacimiento" placeholder="Fecha de nacimiento (opcional)" style="color-scheme:dark;" />
     <div class="modal-btns">
       <button id="btn-cancelar">Cancelar</button>
       <button id="btn-confirmar">Agregar</button>
@@ -618,6 +675,17 @@ header {
     </div>
   </div>
 </div>
+<!-- Banner cumpleaños -->
+<div id="birthday-banner">
+  <div class="banner-icon">🎂</div>
+  <div class="banner-body">
+    <div class="banner-title">¡Mañana es el cumpleaños de…</div>
+    <div class="banner-names" id="banner-names"></div>
+  </div>
+  <button class="banner-close" onclick="cerrarBanner()">✕</button>
+  <div class="banner-progress" id="banner-progress"></div>
+</div>
+
 </div><!-- /app-screen -->
 
 <script type="module">
@@ -683,10 +751,11 @@ async function guardarConfig(cfg) {
 }
 
 // ─── DATOS ───────────────────────────────────────────────────────────────────
-async function agregarAlumno(nombre) {
+async function agregarAlumno(nombre, fechaNacimiento = null) {
   await guardarAlumnos([..._alumnos, {
     id:              Date.now(),
     nombre:          nombre.trim(),
+    fechaNacimiento: fechaNacimiento,
     fechaAlta:       new Date().toISOString().slice(0, 10),
     ultimoMesPagado: null,
     ultimoPlanMes:   null
@@ -843,6 +912,7 @@ function render() { renderAlumnos(); renderResumen(); }
 // ─── MODALES ─────────────────────────────────────────────────────────────────
 function abrirModal() {
   document.getElementById('input-nombre').value = '';
+  document.getElementById('input-nacimiento').value = '';
   document.getElementById('overlay').classList.add('open');
   setTimeout(() => document.getElementById('input-nombre').focus(), 120);
 }
@@ -851,9 +921,60 @@ function cerrarModal() {
 }
 async function confirmarAgregar() {
   const nombre = document.getElementById('input-nombre').value.trim();
+  const fechaNacimiento = document.getElementById('input-nacimiento').value || null;
   if (!nombre) { document.getElementById('input-nombre').focus(); return; }
-  await agregarAlumno(nombre);
+  await agregarAlumno(nombre, fechaNacimiento);
   cerrarModal();
+}
+
+// ─── BANNER CUMPLEAÑOS ───────────────────────────────────────────────────────
+let _bannerTimer = null;
+const BANNER_DURATION = 12000; // 12 segundos
+
+function mostrarBannerCumpleaños() {
+  const mañana = new Date();
+  mañana.setDate(mañana.getDate() + 1);
+  const mmdd = `${String(mañana.getMonth()+1).padStart(2,'0')}-${String(mañana.getDate()).padStart(2,'0')}`;
+
+  const cumpleaneros = _alumnos.filter(a => {
+    if (!a.fechaNacimiento) return false;
+    const partes = a.fechaNacimiento.slice(5); // "MM-DD"
+    return partes === mmdd;
+  });
+
+  if (!cumpleaneros.length) return;
+
+  const banner   = document.getElementById('birthday-banner');
+  const names    = document.getElementById('banner-names');
+  const progress = document.getElementById('banner-progress');
+
+  names.textContent = cumpleaneros.map(a => a.nombre).join(', ');
+  banner.classList.add('visible');
+
+  // Barra de progreso animada
+  progress.style.animation = 'none';
+  void progress.offsetWidth; // reflow
+  progress.style.animationDuration = BANNER_DURATION + 'ms';
+  progress.style.animation = `bannerProgress ${BANNER_DURATION}ms linear forwards`;
+
+  if (_bannerTimer) clearTimeout(_bannerTimer);
+  _bannerTimer = setTimeout(cerrarBanner, BANNER_DURATION);
+}
+
+function cerrarBanner() {
+  if (_bannerTimer) { clearTimeout(_bannerTimer); _bannerTimer = null; }
+  const banner = document.getElementById('birthday-banner');
+  banner.style.animation = 'none';
+  banner.style.opacity   = '0';
+  banner.style.transform = 'translateX(-50%) translateY(-20px)';
+  banner.style.transition = 'opacity .3s, transform .3s';
+  setTimeout(() => {
+    banner.classList.remove('visible');
+    banner.style.animation  = '';
+    banner.style.opacity    = '';
+    banner.style.transform  = '';
+    banner.style.transition = '';
+  }, 320);
 }
 
 // ─── CONFIRM PAGO ────────────────────────────────────────────────────────────
@@ -966,6 +1087,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('input-nombre')   ?.addEventListener('keydown', e => {
     if (e.key === 'Enter') confirmarAgregar();
   });
+  document.getElementById('input-nacimiento')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmarAgregar();
+  });
   document.getElementById('overlay')?.addEventListener('click', e => {
     if (e.target === document.getElementById('overlay')) cerrarModal();
   });
@@ -997,10 +1121,12 @@ onAuthStateChanged(auth, user => {
     appScreen.style.display   = 'block';
 
     // Iniciar escucha en tiempo real
+    let _bannerMostrado = false;
     _unsubAlumnos = onSnapshot(REF_ALUMNOS, snap => {
       _alumnos = snap.exists() ? (snap.data().lista || []) : [];
       _listo   = true;
       render();
+      if (!_bannerMostrado) { _bannerMostrado = true; mostrarBannerCumpleaños(); }
     });
     _unsubConfig = onSnapshot(REF_CONFIG, snap => {
       _config = snap.exists() ? snap.data() : { precio: 0 };

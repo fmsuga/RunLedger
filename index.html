@@ -42,24 +42,58 @@ header {
   padding: 16px 18px 0;
 }
 
-.topbar {
+/* ── HEADER ── */
+.logo-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
+  background: var(--bg);
+  border-bottom: 1px solid #1e1e1e;
+  padding: 0 18px;
+  min-height: 170px;
+  gap: 0;
 }
-
-.app-name {
-  font-family: 'Literata', serif;
-  font-size: 1rem;
+.logo-col {
+  width: 170px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-imagen {
+  height: 160px;
+  width: auto;
+  display: block;
+}
+.logo-nombre-col {
+  flex: 1;
+  padding-left: 16px;
+  border-left: 1px solid #222;
+  margin-left: 4px;
+}
+.logo-nombre {
+  font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: .04em;
   color: var(--text);
+  letter-spacing: .02em;
+  line-height: 1.1;
 }
-
+.logo-nombre span {
+  color: #60a5fa;
+}
+.logo-nombre .runners {
+  color: #fb923c;
+}
+.logo-acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
 .header-actions {
   display: flex;
-  gap: 10px;
+  gap: 6px;
 }
 
 .icon-btn {
@@ -266,146 +300,258 @@ header {
 
 /* ── RESUMEN ── */
 #resumen-content {
-  padding: 20px 16px 40px;
-}
-
-/* Hoja de papel */
-.resumen-papel {
-  background: #f9f8f6;
-  border-radius: 16px;
-  padding: 28px 24px 32px;
-  color: #1a1a1a;
-  box-shadow: 0 2px 16px rgba(0,0,0,.35);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Línea decorativa superior tipo membrete */
-.resumen-papel::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #1a1a1a 60%, transparent);
-}
-
-/* Cabecera del papel */
-.r-header {
+  padding: 20px 18px 60px;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1.5px solid #1a1a1a;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.r-header-left {}
+/* Wrapper con efecto papel flotante */
+#resumen-inner {
+  background: rgba(28, 28, 28, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 24px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.5);
+}
 
-.r-titulo {
-  font-size: 1.25rem;
+/* Grid de dos columnas para ingresos + donut */
+.rs-dos-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.rs-col-izq {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rs-col-der {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Logo row en resumen */
+.rs-logo-row {
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  text-align: center;
+}
+.rs-logo-name {
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #1a1a1a;
-  line-height: 1.2;
+  color: #f0f0f0;
 }
-
-.r-subtitulo {
-  font-size: .82rem;
-  color: #888;
+.rs-logo-sub {
+  font-size: .75rem;
+  color: #555;
   margin-top: 3px;
 }
 
-.r-header-right {
+/* Hero */
+.rs-hero {
+  background: #f0f0f0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rs-periodo-mes {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+}
+.rs-periodo-label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.rs-total-num {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
   text-align: right;
 }
-
-.r-mes {
+.rs-total-label {
   font-size: .78rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Bloque de ingreso — protagonista */
+.rs-ingresos {
+  background: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.rs-ingreso-row {
+  padding: 20px 24px;
+  border-bottom: 1px solid #2a2a2a;
+}
+.rs-ingreso-row:last-child { border-bottom: none; }
+.rs-ingreso-label {
+  font-size: .82rem;
+  font-weight: 700;
   color: #888;
   text-transform: uppercase;
-  letter-spacing: .07em;
+  letter-spacing: .06em;
+  margin-bottom: 6px;
 }
-
-.r-mes-valor {
-  font-size: 1rem;
+.rs-ingreso-valor {
+  font-size: 2rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #f0f0f0;
+  line-height: 1;
+}
+.rs-ingreso-row.principal .rs-ingreso-label { color: #bbb; }
+.rs-ingreso-row.principal .rs-ingreso-valor { font-size: 2.6rem; color: #fff; }
+
+/* Alumnos con donut */
+.rs-alumnos-wrap {
+  background: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.rs-donut-wrap { position: relative; flex-shrink: 0; }
+.rs-donut-wrap svg { display: block; }
+.rs-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.rs-donut-pct {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+.rs-donut-sub {
+  font-size: .6rem;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: .04em;
   margin-top: 2px;
 }
-
-/* Sección dentro del papel */
-.r-seccion {
-  margin-bottom: 24px;
-}
-
-.r-seccion-titulo {
-  font-size: .7rem;
-  font-weight: 700;
-  color: #aaa;
-  text-transform: uppercase;
-  letter-spacing: .1em;
+.rs-alumnos-legend { flex: 1; }
+.rs-legend-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   margin-bottom: 10px;
 }
+.rs-legend-row:last-child { margin-bottom: 0; }
+.rs-legend-num {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  line-height: 1;
+  min-width: 36px;
+}
+.rs-legend-label {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.rs-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 
-.r-fila {
+/* Planificaciones */
+.rs-plan-wrap {
+  background: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+.rs-plan-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 9px 0;
-  border-bottom: 1px solid #e8e6e1;
+  margin-bottom: 16px;
 }
-.r-fila:last-of-type { border-bottom: none; }
-
-.r-fila-label {
-  font-size: .95rem;
-  color: #555;
-}
-
-.r-fila-valor {
-  font-size: 1rem;
+.rs-plan-titulo {
+  font-size: .82rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: .06em;
 }
-
-/* Colores sobre fondo blanco — bien contrastados */
-.r-fila-valor.verde    { color: #16a34a; }
-.r-fila-valor.rojo     { color: #dc2626; }
-.r-fila-valor.amarillo { color: #b45309; }
-.r-fila-valor.violeta  { color: #7c3aed; }
-
-/* Fila destacada (ingreso real) */
-.r-fila.destacada .r-fila-label {
+.rs-plan-pct {
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #1a1a1a;
-  font-size: 1rem;
+  color: #f0f0f0;
 }
-.r-fila.destacada .r-fila-valor {
-  font-size: 1.25rem;
+.rs-plan-nums {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 18px;
 }
-
-/* Barra de progreso sobre papel */
-.r-progress-wrap {
-  background: #e0ddd8;
+.rs-plan-num {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  line-height: 1;
+}
+.rs-plan-label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-top: 4px;
+}
+.rs-plan-enviadas .rs-plan-num { color: #c4b5fd; }
+.rs-bar-wrap {
+  background: #2a2a2a;
   border-radius: 99px;
-  height: 5px;
-  margin: 14px 0 5px;
+  height: 10px;
   overflow: hidden;
+  margin-bottom: 6px;
 }
-.r-progress-bar {
+.rs-bar-fill {
   height: 100%;
   border-radius: 99px;
-  transition: width .5s ease;
+  background: linear-gradient(90deg, #7c3aed, #c4b5fd);
+  transition: width .6s ease;
 }
-.r-progress-label {
+.rs-bar-label {
   font-size: .75rem;
-  color: #999;
+  font-weight: 700;
+  color: #666;
   text-align: right;
-}
-
-/* Divisor entre secciones */
-.r-divisor {
-  border: none;
-  border-top: 1px dashed #d0cdc8;
-  margin: 20px 0;
 }
 
 /* ── MODAL ── */
@@ -562,14 +708,22 @@ header {
 
 <!-- APP (oculta hasta autenticar) -->
 <div id="app-screen" style="display:none;">
-  <div class="topbar">
-    <span class="app-name">RUNLEDGER</span>
-    <div class="header-actions">
-      <button class="icon-btn" id="btn-precio">⚙ Precio</button>
-      <button class="icon-btn" id="btn-exportar">↓ Export</button>
-      <button class="icon-btn" id="btn-importar">↑ Import</button>
-      <button class="icon-btn" id="btn-salir" style="color:#f87171;">Salir</button>
-      <input type="file" id="importFile" hidden accept=".json">
+  <!-- Header dos columnas -->
+  <div class="logo-bar">
+    <div class="logo-col">
+      <img src="media/logo.png" alt="Deltarunners" class="logo-imagen">
+    </div>
+    <div class="logo-nombre-col">
+      <div class="logo-nombre"><span>Delta</span><span class="runners">runners</span></div>
+    </div>
+    <div class="logo-acciones">
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-precio">⚙ Precio</button>
+        <button class="icon-btn" id="btn-exportar">↓</button>
+        <button class="icon-btn" id="btn-importar">↑</button>
+        <button class="icon-btn" id="btn-salir" style="color:#f87171;">Salir</button>
+        <input type="file" id="importFile" hidden accept=".json">
+      </div>
     </div>
   </div>
   <div class="tabs">
@@ -820,73 +974,140 @@ function renderResumen() {
   const deben        = total - pagaron;
   const planEnviadas = data.filter(a => (a.ultimoPlanMes || null) === mes).length;
   const planPend     = total - planEnviadas;
-  const esperado     = total   * precio;
+  const esperado     = total * precio;
   const ingresado    = pagaron * precio;
-  const faltante     = esperado - ingresado;
-  const pct          = total ? Math.round((pagaron      / total) * 100) : 0;
   const pctPlan      = total ? Math.round((planEnviadas / total) * 100) : 0;
+  const pctPago      = total ? Math.round((pagaron / total) * 100) : 0;
   const $fmt = n => precio > 0 ? '$' + n.toLocaleString('es-AR') : '—';
 
+  // Donut pagos (verde)
+  const r = 36, cx = 44, cy = 44, stroke = 10;
+  const circ = 2 * Math.PI * r;
+  const dash = total > 0 ? (pagaron / total) * circ : 0;
+
+  const donut = `
+    <svg width="88" height="88" viewBox="0 0 88 88">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+        stroke="#2a2a2a" stroke-width="${stroke}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+        stroke="#4ade80" stroke-width="${stroke}"
+        stroke-dasharray="${dash} ${circ}"
+        stroke-dashoffset="${circ / 4}"
+        stroke-linecap="round"/>
+    </svg>`;
+
+  // Donut planificaciones (violeta)
+  const dashPlan = total > 0 ? (planEnviadas / total) * circ : 0;
+  const donutPlan = `
+    <svg width="88" height="88" viewBox="0 0 88 88">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+        stroke="#2a2a2a" stroke-width="${stroke}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+        stroke="#a78bfa" stroke-width="${stroke}"
+        stroke-dasharray="${dashPlan} ${circ}"
+        stroke-dashoffset="${circ / 4}"
+        stroke-linecap="round"/>
+    </svg>`;
+
   document.getElementById('resumen-content').innerHTML = `
-    <div class="resumen-papel">
-      <div class="r-header">
-        <div class="r-header-left">
-          <div class="r-titulo">Resumen mensual</div>
-          <div class="r-subtitulo">${total} alumno${total !== 1 ? 's' : ''} registrado${total !== 1 ? 's' : ''}</div>
-        </div>
-        <div class="r-header-right">
-          <div class="r-mes">Período</div>
-          <div class="r-mes-valor">${formatMesLabel(mes)}</div>
+  <div id="resumen-inner">
+
+    <!-- LOGO -->
+    <div class="rs-logo-row">
+      <div class="rs-logo-name">Deltarunners</div>
+      <div class="rs-logo-sub">Resumen mensual</div>
+    </div>
+
+    <!-- PERÍODO -->
+    <div class="rs-hero">
+      <div>
+        <div class="rs-periodo-label">Período actual</div>
+        <div class="rs-periodo-mes">${formatMesLabel(mes)}</div>
+      </div>
+    </div>
+
+    <!-- TOTAL ALUMNOS -->
+    <div class="rs-hero">
+      <div>
+        <div class="rs-periodo-label">Total alumnos</div>
+        <div class="rs-total-num">${total}</div>
+      </div>
+    </div>
+
+    <!-- INGRESOS + DONUT en dos columnas -->
+    <div class="rs-dos-col">
+
+      <!-- COL IZQUIERDA: ingresos -->
+      <div class="rs-col-izq">
+        <div class="rs-ingresos">
+          <div class="rs-ingreso-row principal">
+            <div class="rs-ingreso-label">Ingreso actual</div>
+            <div class="rs-ingreso-valor">${$fmt(ingresado)}</div>
+          </div>
+          <div class="rs-ingreso-row">
+            <div class="rs-ingreso-label">Ingreso esperado</div>
+            <div class="rs-ingreso-valor">${$fmt(esperado)}</div>
+          </div>
         </div>
       </div>
-      <div class="r-seccion">
-        <div class="r-seccion-titulo">Cobros</div>
-        <div class="r-fila destacada">
-          <span class="r-fila-label">Ingreso real</span>
-          <span class="r-fila-valor">${$fmt(ingresado)}</span>
-        </div>
-        <div class="r-fila">
-          <span class="r-fila-label">Ingreso esperado</span>
-          <span class="r-fila-valor">${$fmt(esperado)}</span>
-        </div>
-        <div class="r-fila">
-          <span class="r-fila-label">Faltante</span>
-          <span class="r-fila-valor">${$fmt(faltante)}</span>
-        </div>
-        <div class="r-progress-wrap">
-          <div class="r-progress-bar" style="width:${pct}%;background:#16a34a"></div>
-        </div>
-        <div class="r-progress-label">${pagaron} de ${total} pagaron · ${pct}%</div>
-      </div>
-      <hr class="r-divisor">
-      <div class="r-seccion">
-        <div class="r-seccion-titulo">Alumnos</div>
-        <div class="r-fila">
-          <span class="r-fila-label">Al día</span>
-          <span class="r-fila-valor">${pagaron}</span>
-        </div>
-        <div class="r-fila">
-          <span class="r-fila-label">Deben</span>
-          <span class="r-fila-valor">${deben}</span>
+
+      <!-- COL DERECHA: donut pagos -->
+      <div class="rs-col-der">
+        <div class="rs-alumnos-wrap">
+          <div class="rs-alumnos-legend">
+            <div class="rs-legend-row">
+              <div class="rs-legend-dot" style="background:#4ade80"></div>
+              <div class="rs-legend-num">${pagaron}</div>
+              <div class="rs-legend-label">Pagaron</div>
+            </div>
+            <div class="rs-legend-row">
+              <div class="rs-legend-dot" style="background:#f87171"></div>
+              <div class="rs-legend-num">${deben}</div>
+              <div class="rs-legend-label">Deben</div>
+            </div>
+          </div>
+          <div class="rs-donut-wrap">
+            ${donut}
+            <div class="rs-donut-center">
+              <span class="rs-donut-pct">${pctPago}%</span>
+              <span class="rs-donut-sub">pagó</span>
+            </div>
+          </div>
         </div>
       </div>
-      <hr class="r-divisor">
-      <div class="r-seccion">
-        <div class="r-seccion-titulo">Planificaciones</div>
-        <div class="r-fila">
-          <span class="r-fila-label">Enviadas</span>
-          <span class="r-fila-valor">${planEnviadas}</span>
-        </div>
-        <div class="r-fila">
-          <span class="r-fila-label">Pendientes</span>
-          <span class="r-fila-valor">${planPend}</span>
-        </div>
-        <div class="r-progress-wrap">
-          <div class="r-progress-bar" style="width:${pctPlan}%;background:#7c3aed"></div>
-        </div>
-        <div class="r-progress-label">${planEnviadas} de ${total} enviadas · ${pctPlan}%</div>
+
+    </div>
+
+    <!-- PLANIFICACIONES -->
+    <div class="rs-plan-wrap">
+      <div class="rs-plan-header">
+        <div class="rs-plan-titulo">Planificaciones</div>
       </div>
-    </div>`;
+      <div style="display:flex;align-items:center;gap:24px;">
+        <div class="rs-alumnos-legend" style="flex:1;">
+          <div class="rs-legend-row">
+            <div class="rs-legend-dot" style="background:#c4b5fd"></div>
+            <div class="rs-legend-num" style="color:#c4b5fd;">${planEnviadas}</div>
+            <div class="rs-legend-label">Enviadas</div>
+          </div>
+          <div class="rs-legend-row">
+            <div class="rs-legend-dot" style="background:#444"></div>
+            <div class="rs-legend-num">${planPend}</div>
+            <div class="rs-legend-label">Pendientes</div>
+          </div>
+        </div>
+        <div class="rs-donut-wrap">
+          ${donutPlan}
+          <div class="rs-donut-center">
+            <span class="rs-donut-pct" style="color:#c4b5fd;">${pctPlan}%</span>
+            <span class="rs-donut-sub">enviado</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  `;
 }
 
 function render() { renderAlumnos(); renderResumen(); }

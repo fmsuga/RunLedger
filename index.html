@@ -722,7 +722,7 @@ async function guardarConfig(cfg) {
 async function agregarAlumno(nombre, fechaNac) {
   await guardarAlumnos([..._alumnos, {
     id:              Date.now(),
-    nombre:          nombre.trim(),
+    nombre:          capitalizar(nombre.trim()),
     fechaAlta:       new Date().toISOString().slice(0, 10),
     fechaNacimiento: fechaNac || null,
     ultimoMesPagado: null,
@@ -909,7 +909,7 @@ async function confirmarAgregar() {
   cerrarModal();
 }
 
-// ─── PERFIL ALUMNO ───────────────────────────────────────────────────────────
+const capitalizar = s => s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 let _perfilId = null;
 function abrirPerfil(id) {
   const a = _alumnos.find(x => x.id === id);
@@ -926,7 +926,7 @@ function cerrarPerfil() {
 }
 async function guardarPerfil() {
   if (_perfilId === null) return;
-  const nombre = document.getElementById('perfil-nombre').value.trim();
+  const nombre = capitalizar(document.getElementById('perfil-nombre').value.trim());
   const fnac   = document.getElementById('perfil-fnac').value || null;
   if (!nombre) { document.getElementById('perfil-nombre').focus(); return; }
   await guardarAlumnos(_alumnos.map(a =>

@@ -19,26 +19,33 @@ const auth = getAuth(app);
 
 // ─── ESTADO ───────────────────────────────────────────────────────────────────
 // Estructura Firestore:
-//   usuarios/{uid}                     ← config global (nombre, colores, precio)
-//   usuarios/{uid}/datos/alumnos       ← alumnos sin subgrupo
-//   usuarios/{uid}/subgrupos/{sid}     ← { nombre, precio? }
+//   usuarios/{uid}                          ← config global
+//   usuarios/{uid}/datos/alumnos            ← alumnos sin subgrupo
+//   usuarios/{uid}/subgrupos/{sid}          ← { nombre, precio? }
 //   usuarios/{uid}/subgrupos/{sid}/datos/alumnos
+//   usuarios/{uid}/historial/{YYYY-MM}      ← snapshot mensual global
+//   usuarios/{uid}/subgrupos/{sid}/historial/{YYYY-MM} ← snapshot mensual por subgrupo
 
 let _uid            = null;
-let _config         = { precio: 0 };   // config global
-let _subgrupos      = [];              // [{ id, nombre, precio? }]
-let _subActual      = '__general__';   // '__general__' o id del subgrupo
+let _config         = { precio: 0 };
+let _subgrupos      = [];
+let _subActual      = '__general__';
 let _alumnos        = [];
 let _listo          = false;
 let _unsubAlumnos   = null;
 let _unsubConfig    = null;
+let _historial      = {};   // { 'YYYY-MM': { alumnos, pagaron, ingreso, precio } }
 
 // ─── REFERENCIAS ─────────────────────────────────────────────────────────────
-const refConfig          = ()  => doc(db, 'usuarios', _uid);
-const refAlumnosGen      = ()  => doc(db, 'usuarios', _uid, 'datos', 'alumnos');
-const refSubgrupos       = ()  => collection(db, 'usuarios', _uid, 'subgrupos');
-const refSubgrupo        = id  => doc(db, 'usuarios', _uid, 'subgrupos', id);
-const refAlumnosSub      = id  => doc(db, 'usuarios', _uid, 'subgrupos', id, 'datos', 'alumnos');
+const refConfig          = ()     => doc(db, 'usuarios', _uid);
+const refAlumnosGen      = ()     => doc(db, 'usuarios', _uid, 'datos', 'alumnos');
+const refSubgrupos       = ()     => collection(db, 'usuarios', _uid, 'subgrupos');
+const refSubgrupo        = id     => doc(db, 'usuarios', _uid, 'subgrupos', id);
+const refAlumnosSub      = id     => doc(db, 'usuarios', _uid, 'subgrupos', id, 'datos', 'alumnos');
+const refHistorialGen    = ()     => collection(db, 'usuarios', _uid, 'historial');
+const refSnapshotGen     = ym     => doc(db, 'usuarios', _uid, 'historial', ym);
+const refHistorialSub    = sid    => collection(db, 'usuarios', _uid, 'subgrupos', sid, 'historial');
+const refSnapshotSub     = (sid, ym) => doc(db, 'usuarios', _uid, 'subgrupos', sid, 'historial', ym);
 
 // ─── TIEMPO ──────────────────────────────────────────────────────────────────
 function getMesActual() {
@@ -80,6 +87,70 @@ async function guardarConfigGlobal(cfg) {
   renderDropdown();
 }
 
+// ─── HISTORIAL MENSUAL ───────────────────────────────────────────────────────
+// Snapshot: foto del estado del mes. Se graba/actualiza cada vez que cambia
+// el estado de pagos. El snapshot del mes actual se mantiene vivo.
+// Los meses pasados quedan como registro permanente.
+
+async function grabarSnapshot(lista, ym) {
+  const precio   = getPrecioActivo();
+  const pagaron  = lista.filter(a => a.ultimoMesPagado === ym).length;
+  const ingreso  = pagaron * precio;
+
+  const snap = {
+    ym,
+    alumnos : lista.length,
+    pagaron,
+    ingreso,
+    precio,
+    bajas   : 0,   // reservado para futuro
+    altas   : lista.filter(a => (a.fechaAlta||'').slice(0,7) === ym).length,
+  };
+
+  if (_subActual === '__general__') {
+    await setDoc(refSnapshotGen(ym), snap, { merge: true });
+  } else {
+    await setDoc(refSnapshotSub(_subActual, ym), snap, { merge: true });
+  }
+}
+
+async function cargarHistorial() {
+  try {
+    let snaps;
+    if (_subActual === '__general__') {
+      snaps = await getDocs(refHistorialGen());
+    } else {
+      snaps = await getDocs(refHistorialSub(_subActual));
+    }
+    _historial = {};
+    snaps.forEach(d => { _historial[d.id] = d.data(); });
+  } catch(e) {
+    _historial = {};
+  }
+}
+
+// Fusiona los datos reales del mes actual al historial en memoria (sin Firebase)
+function historialConMesActual() {
+  const ym     = getMesActual();
+  const precio = getPrecioActivo();
+  const pagaron = _alumnos.filter(a => a.ultimoMesPagado === ym).length;
+  const merged  = { ..._historial };
+  merged[ym] = {
+    ym,
+    alumnos : _alumnos.length,
+    pagaron,
+    ingreso : pagaron * precio,
+    precio,
+    altas   : _alumnos.filter(a => (a.fechaAlta||'').slice(0,7) === ym).length,
+    ...(merged[ym] || {}),   // no pisar si ya existe data más completa
+    // pero sí actualizar alumnos/pagaron/ingreso del mes actual
+    alumnos : _alumnos.length,
+    pagaron,
+    ingreso : pagaron * precio,
+  };
+  return merged;
+}
+
 
 // ─── SUBGRUPOS ───────────────────────────────────────────────────────────────
 async function cargarSubgrupos() {
@@ -110,13 +181,18 @@ function activarSubgrupo(sid) {
   _subActual = sid;
   _listo     = false;
   _alumnos   = [];
+  _historial = {};
   renderAlumnos();
   renderDropdown();
 
   const ref = sid === '__general__' ? refAlumnosGen() : refAlumnosSub(sid);
-  _unsubAlumnos = onSnapshot(ref, snap => {
+  _unsubAlumnos = onSnapshot(ref, async snap => {
     _alumnos = snap.exists() ? (snap.data().lista || []) : [];
     _listo   = true;
+    // Cargar historial la primera vez que llegan los alumnos
+    if (Object.keys(_historial).length === 0) {
+      await cargarHistorial();
+    }
     render();
   });
 }
@@ -208,28 +284,21 @@ function renderAlumnos() {
   }
 
   lista.innerHTML = sorted.map(a => {
-    const est         = getEstado(a);
-    const pagado      = a.ultimoMesPagado === mes;
-    const planEnviada = (a.ultimoPlanMes || null) === mes;
-    const fnacLabel   = a.fechaNacimiento
-      ? (() => { const [y,m,d] = a.fechaNacimiento.split('-'); return `${d}/${m}/${y}`; })()
-      : null;
+    const est    = getEstado(a);
+    const pagado = a.ultimoMesPagado === mes;
     return `
-      <div class="card">
+      <div class="card" data-action-card="perfil" data-id="${a.id}" style="cursor:pointer;">
         <div class="indicador ${est}"></div>
         <div class="card-inner">
-          <div style="flex:1;min-width:0;">
-            <div class="nombre">${esc(a.nombre)}</div>
-            ${fnacLabel ? `<div style="font-size:.75rem;color:#555;margin-top:2px;">🎂 ${fnacLabel}</div>` : ''}
-          </div>
+          <div class="nombre">${esc(a.nombre)}</div>
           <div class="card-actions">
             <button class="card-btn pagar ${pagado ? 'done' : ''}"
               data-action="pagar" data-id="${a.id}" data-nombre="${esc(a.nombre)}">
               ${pagado ? 'Pagado' : 'Pago'}
             </button>
-            <button class="card-btn plan ${planEnviada ? 'done' : ''}"
+            <button class="card-btn plan ${(a.ultimoPlanMes||null) === mes ? 'done' : ''}"
               data-action="plan" data-id="${a.id}" data-nombre="${esc(a.nombre)}">
-              ${planEnviada ? 'Plan ✔' : 'Planificación'}
+              ${(a.ultimoPlanMes||null) === mes ? 'Plan ✔' : 'Planificación'}
             </button>
             <button class="card-btn eliminar" style="color:#60a5fa;"
               data-action="perfil" data-id="${a.id}">Info</button>
@@ -357,20 +426,235 @@ function renderResumen() {
 
 function render() { renderAlumnos(); renderResumen(); }
 
+// ─── RENDER MÉTRICAS ─────────────────────────────────────────────────────────
+function renderMetricas() {
+  const el = document.getElementById('metricas-content');
+  if (!el) return;
+
+  const alumnos  = _alumnos;
+  const hist     = historialConMesActual();
+  const series   = Object.entries(hist).sort((a,b) => a[0].localeCompare(b[0]));
+  const mesActual = getMesActual();
+  const precio   = getPrecioActivo();
+
+  if (!alumnos.length && !series.length) {
+    el.innerHTML = `<div class="dash-empty"><div class="dash-empty-title">Sin datos aún</div>Agregá alumnos para ver las métricas del grupo.</div>`;
+    return;
+  }
+
+  // ── Cobros mes actual ──
+  const pagaron    = alumnos.filter(a => a.ultimoMesPagado === mesActual).length;
+  const deben      = alumnos.length - pagaron;
+  const pctPago    = alumnos.length ? Math.round((pagaron / alumnos.length) * 100) : 0;
+  const $fmt       = n => precio > 0 ? '$' + n.toLocaleString('es-AR') : '—';
+
+  // ── Tendencia ──
+  let tendencia = null;
+  if (series.length >= 2) tendencia = series[series.length-1][1].alumnos - series[series.length-2][1].alumnos;
+
+  // ── Cobro histórico promedio ──
+  const cobrosHist    = series.filter(([,s]) => s.alumnos > 0 && s.pagaron != null);
+  const pctCobrosHist = cobrosHist.length ? Math.round(cobrosHist.reduce((a,[,s]) => a + (s.pagaron/s.alumnos)*100, 0) / cobrosHist.length) : null;
+
+  // ── Nuevos inscriptos por mes ──
+  const altasPorMes = {};
+  alumnos.forEach(a => { const ym = (a.fechaAlta || a.fechaInscripcion || '').slice(0,7); if (ym) altasPorMes[ym] = (altasPorMes[ym]||0)+1; });
+  series.forEach(([ym, s]) => { if (s.altas && !altasPorMes[ym]) altasPorMes[ym] = s.altas; });
+  const altasSeries  = Object.entries(altasPorMes).sort((a,b)=>a[0].localeCompare(b[0]));
+  const maxAltas     = altasSeries.length ? Math.max(...altasSeries.map(([,v])=>v)) : 0;
+  const mesPicoAltas = altasSeries.find(([,v])=>v===maxAltas)?.[0];
+  const altasMesAct  = altasPorMes[mesActual] || 0;
+
+  // ── Alumnos por mes ──
+  const conAlumnos      = series.filter(([,s])=>s.alumnos>0);
+  const maxAlumnos      = conAlumnos.length ? Math.max(...conAlumnos.map(([,s])=>s.alumnos)) : 0;
+  const minAlumnos      = conAlumnos.length ? Math.min(...conAlumnos.map(([,s])=>s.alumnos)) : 0;
+  const mesMasAlumnos   = conAlumnos.find(([,s])=>s.alumnos===maxAlumnos)?.[0];
+  const mesMenosAlumnos = [...conAlumnos].reverse().find(([,s])=>s.alumnos===minAlumnos)?.[0];
+
+  // ── Edades ──
+  const edades   = alumnos.map(a => calcularEdad(a.fechaNacimiento)).filter(e => e !== null);
+  const edadProm = edades.length ? Math.round(edades.reduce((a,b)=>a+b,0)/edades.length) : null;
+  const edadMax  = edades.length ? Math.max(...edades) : null;
+  const edadMin  = edades.length ? Math.min(...edades) : null;
+  const rangos   = { '<18': 0, '18-25': 0, '26-35': 0, '36-45': 0, '46-55': 0, '55+': 0 };
+  edades.forEach(ed => {
+    if      (ed < 18)  rangos['<18']++;
+    else if (ed <= 25) rangos['18-25']++;
+    else if (ed <= 35) rangos['26-35']++;
+    else if (ed <= 45) rangos['36-45']++;
+    else if (ed <= 55) rangos['46-55']++;
+    else               rangos['55+']++;
+  });
+  const rangoEntries = Object.entries(rangos).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const rangoPred    = rangoEntries[0] || null;
+  const edadMaxBar   = rangoEntries.length ? rangoEntries[0][1] : 1;
+
+  // ── Sexo ──
+  const sexo  = { M:0, F:0, O:0 };
+  alumnos.forEach(a => { if (a.sexo) sexo[a.sexo]++; });
+  const conSexo = sexo.M + sexo.F + sexo.O;
+  const pctM = conSexo ? Math.round((sexo.M/conSexo)*100) : 0;
+  const pctF = conSexo ? Math.round((sexo.F/conSexo)*100) : 0;
+  const pctO = conSexo ? Math.round((sexo.O/conSexo)*100) : 0;
+  const sexoPred = conSexo ? (sexo.M>=sexo.F&&sexo.M>=sexo.O ? `Masculino ${pctM}%` : sexo.F>=sexo.M&&sexo.F>=sexo.O ? `Femenino ${pctF}%` : `Otro ${pctO}%`) : null;
+
+  // ── Nivel ──
+  const niv = { Principiante:0, Intermedio:0, Avanzado:0 };
+  alumnos.forEach(a => { if (a.nivel && niv[a.nivel] !== undefined) niv[a.nivel]++; });
+  const conNivel  = niv.Principiante + niv.Intermedio + niv.Avanzado;
+  const nivelPred = conNivel ? [['Principiante',niv.Principiante],['Intermedio',niv.Intermedio],['Avanzado',niv.Avanzado]].sort((a,b)=>b[1]-a[1])[0][0] : null;
+
+  // ── Antigüedad ──
+  const hoy = new Date();
+  let diasAcum = 0, conFecha = 0;
+  alumnos.forEach(a => { const f = a.fechaAlta || a.fechaInscripcion; if (!f) return; diasAcum += (hoy-new Date(f))/(1000*60*60*24); conFecha++; });
+  const antigMeses = conFecha ? (diasAcum/conFecha/30.4).toFixed(1) : null;
+
+  // ── Helper barras ──
+  function bar(label, val, max, color, showPct) {
+    const pct = max > 0 ? Math.round((val/max)*100) : 0;
+    return `<div class="dash-bar-row"><div class="dash-bar-label">${label}</div><div class="dash-bar-track"><div class="dash-bar-fill" style="width:${pct}%;background:${color};"></div></div>${showPct ? `<div class="dash-bar-pct">${val} <span style="color:#333;">(${pct}%)</span></div>` : `<div class="dash-bar-val">${val}</div>`}</div>`;
+  }
+
+  // ── Filas historial alumnos ──
+  const maxBar  = maxAlumnos || 1;
+  const mesRows = series.slice(-12).map(([ym, s]) => {
+    const isCur = ym === mesActual;
+    const isMax = ym === mesMasAlumnos   && series.length > 1;
+    const isMin = ym === mesMenosAlumnos && series.length > 1 && !isCur;
+    const badge = isCur ? `<span class="dash-month-badge cur">Actual</span>` : isMax ? `<span class="dash-month-badge max">Pico</span>` : isMin ? `<span class="dash-month-badge min">Baja</span>` : '';
+    return `<div class="dash-month-row"><div class="dash-month-name">${formatMesLabel(ym)}</div><div class="dash-month-bar-wrap"><div class="dash-month-bar ${isMax?'is-max':isMin?'is-min':''}" style="width:${Math.round((s.alumnos/maxBar)*100)}%;${isCur?'background:#60a5fa;':''}"></div></div><div class="dash-month-num">${s.alumnos}</div>${badge}</div>`;
+  }).join('');
+
+  // ── Filas nuevos inscriptos ──
+  const maxAltasBar = maxAltas || 1;
+  const altasRows   = altasSeries.slice(-12).map(([ym, v]) => {
+    const isCur = ym === mesActual;
+    const isMax = ym === mesPicoAltas && altasSeries.length > 1;
+    const badge = isCur ? `<span class="dash-month-badge cur">Actual</span>` : isMax ? `<span class="dash-month-badge max">Pico</span>` : '';
+    return `<div class="dash-month-row"><div class="dash-month-name">${formatMesLabel(ym)}</div><div class="dash-month-bar-wrap"><div class="dash-month-bar ${isMax?'is-max':''}" style="width:${Math.round((v/maxAltasBar)*100)}%;${isCur?'background:#60a5fa;':''}"></div></div><div class="dash-month-num">${v}</div>${badge}</div>`;
+  }).join('');
+
+  const subLabel = _subActual === '__general__' ? 'General' : (_subgrupos.find(s=>s.id===_subActual)?.nombre||'Subgrupo');
+
+  el.innerHTML = `
+    <div class="dash-header">
+      <div class="dash-header-title">Análisis del grupo · ${subLabel}</div>
+      <div class="dash-header-subtitle">${alumnos.length} alumno${alumnos.length!==1?'s':''} activos · ${series.length} mes${series.length!==1?'es':''} de historial</div>
+    </div>
+
+    <div class="dash-kpi-grid">
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Alumnos hoy</div>
+        <div class="dash-kpi-value">${alumnos.length}</div>
+        ${tendencia !== null && tendencia !== 0 ? `<div class="dash-kpi-delta ${tendencia>0?'up':'down'}">${tendencia>0?'▲':'▼'} ${Math.abs(tendencia)} vs mes ant.</div>` : tendencia === 0 ? `<div class="dash-kpi-delta">= igual que mes ant.</div>` : ''}
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Cobrado este mes</div>
+        <div class="dash-kpi-value accent-green">${pctPago}%</div>
+        <div class="dash-kpi-progress"><div class="dash-kpi-progress-fill" style="width:${pctPago}%;background:#4ade80;"></div></div>
+        <div class="dash-kpi-sub">${pagaron} pagaron · ${deben} deben</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Cobro prom. histórico</div>
+        <div class="dash-kpi-value${pctCobrosHist!==null&&pctCobrosHist>=80?' accent-green':pctCobrosHist!==null&&pctCobrosHist<65?' accent-red':''}">${pctCobrosHist !== null ? pctCobrosHist+'%' : '—'}</div>
+        <div class="dash-kpi-sub">Sobre ${cobrosHist.length} mes${cobrosHist.length!==1?'es':''}</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Nuevos este mes</div>
+        <div class="dash-kpi-value accent-blue">${altasMesAct}</div>
+        ${mesPicoAltas && mesPicoAltas !== mesActual ? `<div class="dash-kpi-sub">Pico: ${formatMesLabel(mesPicoAltas)} (${maxAltas})</div>` : ''}
+      </div>
+    </div>
+
+    <div class="dash-two-col">
+      <div class="dash-panel">
+        <div class="dash-section-label">Rango etario${edadProm !== null ? `<span>Prom. ${edadProm} · Rango ${edadMin}–${edadMax}</span>` : ''}</div>
+        ${rangoEntries.length
+          ? rangoEntries.map(([l,v]) => bar(l, v, edadMaxBar, l === (rangoPred&&rangoPred[0]) ? '#60a5fa' : '#243040', true)).join('') +
+            (rangoPred ? `<div class="dash-insight-pill" style="margin-top:10px;">Predomina <strong>${rangoPred[0]}</strong> con ${Math.round((rangoPred[1]/alumnos.length)*100)}% del grupo</div>` : '')
+          : '<div class="dash-no-data">Cargá fechas de nacimiento en los perfiles</div>'}
+      </div>
+      <div class="dash-panel">
+        <div class="dash-section-label">Sexo${conSexo>0?`<span>${conSexo} / ${alumnos.length} con dato</span>`:''}</div>
+        ${conSexo > 0 ? `
+          <div class="dash-sexo-bars">
+            <div class="dash-sexo-bar-row">
+              <div class="dash-sexo-label">M</div>
+              <div class="dash-sexo-track"><div class="dash-sexo-fill" style="width:${pctM}%;background:#60a5fa;"></div></div>
+              <div class="dash-sexo-stat"><strong>${sexo.M}</strong> <span>${pctM}%</span></div>
+            </div>
+            <div class="dash-sexo-bar-row">
+              <div class="dash-sexo-label">F</div>
+              <div class="dash-sexo-track"><div class="dash-sexo-fill" style="width:${pctF}%;background:#fb923c;"></div></div>
+              <div class="dash-sexo-stat"><strong>${sexo.F}</strong> <span>${pctF}%</span></div>
+            </div>
+            ${sexo.O > 0 ? `<div class="dash-sexo-bar-row"><div class="dash-sexo-label">O</div><div class="dash-sexo-track"><div class="dash-sexo-fill" style="width:${pctO}%;background:#a78bfa;"></div></div><div class="dash-sexo-stat"><strong>${sexo.O}</strong> <span>${pctO}%</span></div></div>` : ''}
+          </div>
+          <div class="dash-insight-pill" style="margin-top:8px;">Predomina <strong>${sexoPred}</strong></div>
+        ` : '<div class="dash-no-data">Cargá el sexo en los perfiles</div>'}
+
+        <div class="dash-section-label" style="margin-top:18px;">Nivel${conNivel>0?`<span>${conNivel} / ${alumnos.length} con dato</span>`:''}</div>
+        ${conNivel > 0 ? `
+          ${bar('Principiante', niv.Principiante, conNivel, '#4ade80', true)}
+          ${bar('Intermedio',   niv.Intermedio,   conNivel, '#fbbf24', true)}
+          ${bar('Avanzado',     niv.Avanzado,     conNivel, '#f87171', true)}
+          ${nivelPred ? `<div class="dash-insight-pill" style="margin-top:8px;">Nivel predominante: <strong>${nivelPred}</strong></div>` : ''}
+        ` : '<div class="dash-no-data">Cargá el nivel en los perfiles</div>'}
+      </div>
+    </div>
+
+    <div class="dash-full">
+      <div class="dash-section-label">Alumnos por mes${mesMasAlumnos?`<span>Pico: ${formatMesLabel(mesMasAlumnos)} · ${maxAlumnos}</span>`:''}</div>
+      ${series.length ? mesRows : '<div class="dash-no-data">Se acumula automáticamente cada mes.</div>'}
+    </div>
+
+    <div class="dash-full">
+      <div class="dash-section-label">Nuevas incorporaciones por mes${mesPicoAltas?`<span>Mejor: ${formatMesLabel(mesPicoAltas)} · ${maxAltas}</span>`:''}</div>
+      ${altasSeries.length ? altasRows : '<div class="dash-no-data">Se registra al agregar cada alumno.</div>'}
+    </div>
+
+    <div class="dash-two-col">
+      <div class="dash-panel">
+        <div class="dash-section-label">Cobros — ${formatMesLabel(mesActual)}</div>
+        <div class="dash-stat-row"><div class="dash-stat-name">Pagaron</div><div class="dash-stat-val" style="color:#4ade80;">${pagaron}</div></div>
+        <div class="dash-stat-row"><div class="dash-stat-name">Deben</div><div class="dash-stat-val" style="color:#f87171;">${deben}</div></div>
+        <div class="dash-stat-row"><div class="dash-stat-name">Tasa de cobro</div><div class="dash-stat-val">${pctPago}%</div></div>
+        ${precio>0?`<div class="dash-stat-row"><div class="dash-stat-name">Cobrado</div><div class="dash-stat-val">${$fmt(pagaron*precio)}</div></div><div class="dash-stat-row"><div class="dash-stat-name">Deuda pendiente</div><div class="dash-stat-val" style="color:#f87171;">${$fmt(deben*precio)}</div></div>`:''}
+        ${pctCobrosHist !== null && pctCobrosHist < 75 ? `<div class="dash-insight-pill" style="margin-top:10px;border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.06);color:#fbbf24;">Tasa histórica baja (${pctCobrosHist}%). Revisá alumnos morosos.</div>` : ''}
+      </div>
+      <div class="dash-panel">
+        <div class="dash-section-label">Grupo</div>
+        <div class="dash-stat-row"><div class="dash-stat-name">Antigüedad prom.</div><div class="dash-stat-val">${antigMeses !== null ? antigMeses+' meses' : '—'}</div></div>
+        <div class="dash-stat-row"><div class="dash-stat-name">Rango etario ppal.</div><div class="dash-stat-val">${rangoPred ? rangoPred[0] : '—'}</div></div>
+        <div class="dash-stat-row"><div class="dash-stat-name">Sexo predominante</div><div class="dash-stat-val">${sexoPred || '—'}</div></div>
+        <div class="dash-stat-row"><div class="dash-stat-name">Nivel predominante</div><div class="dash-stat-val">${nivelPred || '—'}</div></div>
+      </div>
+    </div>
+  `;
+}
+
 // ─── DATOS ALUMNOS ───────────────────────────────────────────────────────────
 async function agregarAlumno(nombre, fechaNac) {
-  await guardarAlumnos([..._alumnos, {
+  const nuevaLista = [..._alumnos, {
     id: Date.now(), nombre: capitalizar(nombre.trim()),
     fechaAlta: new Date().toISOString().slice(0,10),
     fechaNacimiento: fechaNac || null,
     ultimoMesPagado: null, ultimoPlanMes: null
-  }]);
+  }];
+  await guardarAlumnos(nuevaLista);
+  // Graba snapshot para registrar la alta
+  await grabarSnapshot(nuevaLista, getMesActual());
 }
 async function eliminarAlumno(id) { await guardarAlumnos(_alumnos.filter(a => a.id !== id)); }
 async function pagarAlumno(id) {
-  await guardarAlumnos(_alumnos.map(a =>
+  const nuevaLista = _alumnos.map(a =>
     a.id === id && a.ultimoMesPagado !== getMesActual() ? { ...a, ultimoMesPagado: getMesActual() } : a
-  ));
+  );
+  await guardarAlumnos(nuevaLista);
+  // Graba snapshot para registrar el cobro
+  await grabarSnapshot(nuevaLista, getMesActual());
 }
 async function enviarPlan(id) {
   await guardarAlumnos(_alumnos.map(a =>
@@ -394,23 +678,110 @@ async function confirmarAgregar() {
   cerrarModal();
 }
 
+// ─── HELPERS PERFIL ──────────────────────────────────────────────────────────
+function calcularEdad(fnac) {
+  if (!fnac) return null;
+  const hoy   = new Date();
+  const nac   = new Date(fnac);
+  let edad    = hoy.getFullYear() - nac.getFullYear();
+  const m     = hoy.getMonth() - nac.getMonth();
+  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+  return edad;
+}
+
+function perfilSetSexo(sexo) {
+  document.querySelectorAll('.perfil-sexo-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.sexo === sexo);
+  });
+}
+
+function perfilSetNivel(nivel) {
+  document.querySelectorAll('.perfil-nivel-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.nivel === nivel);
+  });
+}
+
+function perfilGetSexo() {
+  const sel = document.querySelector('.perfil-sexo-btn.selected');
+  return sel ? sel.dataset.sexo : null;
+}
+
+function perfilGetNivel() {
+  const sel = document.querySelector('.perfil-nivel-btn.selected');
+  return sel ? sel.dataset.nivel : null;
+}
+
 let _perfilId = null;
+
 function abrirPerfil(id) {
   const a = _alumnos.find(x => x.id === id);
   if (!a) return;
   _perfilId = id;
-  document.getElementById('perfil-titulo').textContent = a.nombre;
-  document.getElementById('perfil-nombre').value       = a.nombre;
-  document.getElementById('perfil-fnac').value         = a.fechaNacimiento || '';
+
+  // Hero
+  const inicial = (a.nombre || '?')[0].toUpperCase();
+  document.getElementById('perfil-avatar').textContent      = inicial;
+  document.getElementById('perfil-hero-nombre').textContent = a.nombre;
+
+  // Meta badges (edad + sexo + nivel)
+  const meta = document.getElementById('perfil-hero-meta');
+  meta.innerHTML = '';
+  const edad = calcularEdad(a.fechaNacimiento);
+  if (edad !== null) { const s = document.createElement('span'); s.textContent = `${edad} años`; meta.appendChild(s); }
+  if (a.sexo)        { const s = document.createElement('span'); s.textContent = a.sexo === 'M' ? '♂ Masc.' : a.sexo === 'F' ? '♀ Fem.' : '⊕ Otro'; meta.appendChild(s); }
+  if (a.nivel)       { const s = document.createElement('span'); s.textContent = a.nivel; meta.appendChild(s); }
+
+  // Campos tab Info
+  document.getElementById('perfil-nombre').value  = a.nombre;
+  document.getElementById('perfil-fnac').value    = a.fechaNacimiento || '';
+  document.getElementById('perfil-notas').value   = a.notas || '';
+  perfilSetSexo(a.sexo || null);
+
+  // Badge edad
+  const badge = document.getElementById('perfil-edad-badge');
+  badge.textContent = edad !== null ? `${edad} años` : '';
+
+  // Campos tab Deportivo
+  document.getElementById('perfil-objetivos').value   = a.objetivos    || '';
+  document.getElementById('perfil-marca').value       = a.mejorMarca   || '';
+  document.getElementById('perfil-inscripcion').value = a.fechaInscripcion || '';
+  perfilSetNivel(a.nivel || null);
+
+  // Activar tab info por defecto
+  perfilCambiarTab('info');
+
   document.getElementById('perfil-overlay').classList.add('open');
 }
-function cerrarPerfil() { _perfilId = null; document.getElementById('perfil-overlay').classList.remove('open'); }
+
+function cerrarPerfil() {
+  _perfilId = null;
+  document.getElementById('perfil-overlay').classList.remove('open');
+}
+
+function perfilCambiarTab(tab) {
+  document.querySelectorAll('.perfil-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.ptab === tab));
+  document.querySelectorAll('.perfil-panel').forEach(p =>
+    p.classList.toggle('active', p.id === `ppanel-${tab}`));
+}
+
 async function guardarPerfil() {
   if (_perfilId === null) return;
   const nombre = capitalizar(document.getElementById('perfil-nombre').value.trim());
-  const fnac   = document.getElementById('perfil-fnac').value || null;
   if (!nombre) { document.getElementById('perfil-nombre').focus(); return; }
-  await guardarAlumnos(_alumnos.map(a => a.id === _perfilId ? { ...a, nombre, fechaNacimiento: fnac } : a));
+  const fnac           = document.getElementById('perfil-fnac').value || null;
+  const notas          = document.getElementById('perfil-notas').value.trim() || null;
+  const objetivos      = document.getElementById('perfil-objetivos').value.trim() || null;
+  const mejorMarca     = document.getElementById('perfil-marca').value.trim() || null;
+  const fechaInscripcion = document.getElementById('perfil-inscripcion').value || null;
+  const sexo           = perfilGetSexo();
+  const nivel          = perfilGetNivel();
+
+  await guardarAlumnos(_alumnos.map(a =>
+    a.id === _perfilId
+      ? { ...a, nombre, fechaNacimiento: fnac, notas, objetivos, mejorMarca, fechaInscripcion, sexo, nivel }
+      : a
+  ));
   cerrarPerfil();
 }
 
@@ -647,7 +1018,50 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === document.getElementById('overlay')) cerrarModal();
   });
   document.getElementById('buscar')?.addEventListener('input', renderAlumnos);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { cerrarConfig(); cerrarModalNuevoSubgrupo(); cerrarEditSubgrupo(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { cerrarConfig(); cerrarModalNuevoSubgrupo(); cerrarEditSubgrupo(); cerrarPerfil(); } });
+
+  // Tabs internos del perfil
+  document.querySelectorAll('.perfil-tab').forEach(tab => {
+    tab.addEventListener('click', () => perfilCambiarTab(tab.dataset.ptab));
+  });
+
+  // Botones sexo
+  document.querySelectorAll('.perfil-sexo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const yaSelec = btn.classList.contains('selected');
+      perfilSetSexo(yaSelec ? null : btn.dataset.sexo);
+    });
+  });
+
+  // Botones nivel
+  document.querySelectorAll('.perfil-nivel-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const yaSelec = btn.classList.contains('selected');
+      perfilSetNivel(yaSelec ? null : btn.dataset.nivel);
+    });
+  });
+
+  // Actualizar badge de edad al cambiar fecha
+  document.getElementById('perfil-fnac')?.addEventListener('change', e => {
+    const badge = document.getElementById('perfil-edad-badge');
+    const edad  = calcularEdad(e.target.value);
+    badge.textContent = edad !== null ? `${edad} años` : '';
+  });
+
+  // Sub-tabs del Resumen
+  document.getElementById('rsubtab-mes')?.addEventListener('click', () => {
+    document.getElementById('rsubtab-mes').classList.add('active');
+    document.getElementById('rsubtab-metricas').classList.remove('active');
+    document.getElementById('resumen-content').style.display = '';
+    document.getElementById('metricas-content').style.display = 'none';
+  });
+  document.getElementById('rsubtab-metricas')?.addEventListener('click', () => {
+    document.getElementById('rsubtab-metricas').classList.add('active');
+    document.getElementById('rsubtab-mes').classList.remove('active');
+    document.getElementById('resumen-content').style.display = 'none';
+    document.getElementById('metricas-content').style.display = '';
+    renderMetricas();
+  });
 
   document.getElementById('lista')?.addEventListener('click', e => {
     const btn = e.target.closest('[data-action]');

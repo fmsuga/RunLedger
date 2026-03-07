@@ -365,7 +365,13 @@
     <button id="btn-agregar">+ Nuevo alumno</button>
   </div>
   <div id="resumen" class="section">
+    <!-- Sub-tabs de resumen -->
+    <div class="resumen-subtabs">
+      <div class="resumen-subtab active" id="rsubtab-mes">📊 Este mes</div>
+      <div class="resumen-subtab" id="rsubtab-metricas">📈 Métricas</div>
+    </div>
     <div id="resumen-content"></div>
+    <div id="metricas-content" style="display:none;"></div>
   </div>
 </div>
 
@@ -395,24 +401,76 @@
   </div>
 </div>
 
-<!-- ═══ MODAL: Perfil alumno (azul) ═══ -->
+<!-- ═══ MODAL: Perfil alumno expandido ═══ -->
 <div class="pt-overlay" id="perfil-overlay">
-  <div class="pt-modal">
+  <div class="pt-modal" style="max-width:480px;">
     <div class="pt-modal-bar bar-blue"></div>
-    <div class="pt-modal-head">
-      <span class="pt-modal-title" id="perfil-titulo">Perfil</span>
-      <button class="pt-modal-close" id="perfil-cancelar-x">✕</button>
+
+    <!-- Cabecera con avatar inicial + nombre -->
+    <div class="perfil-hero" id="perfil-hero">
+      <div class="perfil-avatar" id="perfil-avatar">?</div>
+      <div class="perfil-hero-info">
+        <div class="perfil-hero-nombre" id="perfil-hero-nombre">—</div>
+        <div class="perfil-hero-meta" id="perfil-hero-meta"></div>
+      </div>
+      <button class="pt-modal-close" id="perfil-cancelar-x" style="align-self:flex-start;margin-top:2px;">✕</button>
     </div>
-    <div class="pt-modal-body">
-      <label class="pt-label">Nombre</label>
-      <input class="pt-input" type="text" id="perfil-nombre" maxlength="60" />
-      <label class="pt-label">Fecha de nacimiento</label>
-      <input class="pt-input" type="date" id="perfil-fnac" style="margin-bottom:0" />
+
+    <!-- Tabs internos del perfil -->
+    <div class="perfil-tabs">
+      <div class="perfil-tab active" data-ptab="info">Información</div>
+      <div class="perfil-tab" data-ptab="deportivo">Deportivo</div>
     </div>
+
+    <!-- Tab: Información general -->
+    <div class="perfil-panel active" id="ppanel-info">
+      <div class="pt-modal-body">
+        <label class="pt-label">Nombre completo</label>
+        <input class="pt-input" type="text" id="perfil-nombre" maxlength="60" />
+
+        <div class="pt-label-row">
+          <span class="pt-label">Fecha de nacimiento</span>
+          <span class="pt-optional" id="perfil-edad-badge"></span>
+        </div>
+        <input class="pt-input" type="date" id="perfil-fnac" />
+
+        <label class="pt-label">Sexo</label>
+        <div class="perfil-sexo-row" id="perfil-sexo-row">
+          <button class="perfil-sexo-btn" data-sexo="M">♂ Masculino</button>
+          <button class="perfil-sexo-btn" data-sexo="F">♀ Femenino</button>
+          <button class="perfil-sexo-btn" data-sexo="O">⊕ Otro</button>
+        </div>
+
+        <label class="pt-label" style="margin-top:4px;">Notas / Observaciones</label>
+        <textarea class="pt-input" id="perfil-notas" rows="3" placeholder="Lesiones, preferencias, contacto de emergencia..." style="resize:vertical;margin-bottom:0;"></textarea>
+      </div>
+    </div>
+
+    <!-- Tab: Deportivo -->
+    <div class="perfil-panel" id="ppanel-deportivo">
+      <div class="pt-modal-body">
+        <label class="pt-label">Objetivos</label>
+        <textarea class="pt-input" id="perfil-objetivos" rows="3" placeholder="Ej: Bajar de peso, preparar media maratón, mejorar técnica..." style="resize:vertical;"></textarea>
+
+        <label class="pt-label">Mejor marca personal</label>
+        <input class="pt-input" type="text" id="perfil-marca" maxlength="80" placeholder="Ej: 5K en 24:30, Maratón 3:45hs..." />
+
+        <label class="pt-label">Nivel</label>
+        <div class="perfil-nivel-row" id="perfil-nivel-row">
+          <button class="perfil-nivel-btn" data-nivel="Principiante">🟢 Principiante</button>
+          <button class="perfil-nivel-btn" data-nivel="Intermedio">🟡 Intermedio</button>
+          <button class="perfil-nivel-btn" data-nivel="Avanzado">🔴 Avanzado</button>
+        </div>
+
+        <label class="pt-label" style="margin-top:4px;">Fecha de inscripción</label>
+        <input class="pt-input" type="date" id="perfil-inscripcion" style="margin-bottom:0;" />
+      </div>
+    </div>
+
     <div class="pt-modal-footer">
       <div class="pt-btn-row">
         <button class="pt-btn pt-btn-secondary" id="perfil-cancelar">Cancelar</button>
-        <button class="pt-btn pt-btn-primary"   id="perfil-guardar">Guardar</button>
+        <button class="pt-btn pt-btn-primary"   id="perfil-guardar">Guardar cambios</button>
       </div>
     </div>
   </div>
@@ -490,10 +548,18 @@
     </div>
     <div class="pt-modal-body">
 
-      <label class="pt-label">Nombre de la agrupación</label>
-      <input class="pt-input" type="text" id="config-nombre" placeholder="Ej: Deltarunners">
+      <!-- Bloque destacado: nombre + precio -->
+      <div class="config-bloque-principal">
+        <div class="config-bloque-label">Datos principales</div>
 
-      <label class="pt-label" style="margin-top:4px;">Colores del nombre</label>
+        <label class="pt-label">Nombre de la agrupación</label>
+        <input class="pt-input" type="text" id="config-nombre" placeholder="Ej: Deltarunners" style="margin-bottom:10px;">
+
+        <label class="pt-label">Precio mensual global ($)</label>
+        <input class="pt-input" type="number" id="config-precio" placeholder="Ej: 12000" style="margin-bottom:0;">
+      </div>
+
+      <label class="pt-label" style="margin-top:18px;">Colores del nombre</label>
       <div class="config-colores-preview-row">
         <div class="config-colores-row">
           <div class="config-color-item">
@@ -516,9 +582,6 @@
         <input type="range" id="config-split" min="0" max="20" value="0" class="config-slider">
         <span class="config-slider-val" id="config-split-val">0</span>
       </div>
-
-      <label class="pt-label">Precio mensual global ($)</label>
-      <input class="pt-input" type="number" id="config-precio" placeholder="Ej: 12000">
 
       <label class="pt-label">Backup de datos</label>
       <div style="display:flex;gap:10px;margin-bottom:4px;">

@@ -746,3 +746,87 @@ header {
   flex: 1;
   margin-bottom: 0;
 }
+
+
+/* ── RESPONSIVE MOBILE ── */
+@media (max-width: 600px) {
+
+  /* HEADER */
+  .logo-bar {
+    min-height: auto;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .logo-col {
+    width: 64px;
+  }
+  .logo-imagen {
+    height: 56px;
+  }
+  .logo-nombre {
+    font-size: 1.3rem;
+  }
+  .logo-acciones {
+    margin-left: 6px;
+  }
+  .header-actions {
+    gap: 5px;
+  }
+  .icon-btn {
+    padding: 6px 10px;
+    font-size: .75rem;
+  }
+
+  /* CARDS ALUMNOS */
+  .card-inner {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+  }
+  .nombre {
+    width: 100%;
+    font-size: .95rem;
+  }
+  .card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .card-btn {
+    width: auto;
+    flex: 1;
+    padding: 8px 6px;
+    font-size: .78rem;
+  }
+  .card-btn.eliminar {
+    flex: 0;
+    padding: 8px 10px;
+  }
+
+  /* FAB */
+  #btn-agregar {
+    bottom: 16px;
+    right: 14px;
+    padding: 14px 20px;
+    font-size: .9rem;
+  }
+
+  /* RESUMEN */
+  .rs-dos-col {
+    grid-template-columns: 1fr;
+  }
+  .rs-total-num {
+    font-size: 2rem;
+  }
+  .rs-ingreso-valor { font-size: 1.6rem; }
+  .rs-ingreso-row.principal .rs-ingreso-valor { font-size: 2rem; }
+
+  /* MODAL */
+  .modal {
+    padding: 24px 16px 32px;
+  }
+
+  /* CONFIG colores preview en mobile: apilados */
+  .config-colores-preview-row {
+    flex-direction: column;
+  }
+}

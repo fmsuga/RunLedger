@@ -13,11 +13,13 @@ const firebaseConfig = {
   appId:             "1:465777579099:web:180da05212713cd0101b7e"
 };
 
-const app         = initializeApp(firebaseConfig);
-const db          = getFirestore(app);
-const auth        = getAuth(app);
-const REF_ALUMNOS = doc(db, 'runledger', 'alumnos');
-const REF_CONFIG  = doc(db, 'runledger', 'config');
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+// Referencias dinámicas — se asignan cuando el usuario se loguea
+let REF_ALUMNOS = null;
+let REF_CONFIG  = null;
 
 let _alumnos = [];
 let _config  = { precio: 0 };
@@ -399,7 +401,7 @@ function exportar() {
   const blob = new Blob([JSON.stringify(_alumnos, null, 2)], { type: 'application/json' });
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(blob);
-  a.download = `runledger_backup_${getMesActual()}.json`;
+  a.download = `profetracker_backup_${getMesActual()}.json`;
   a.click();
 }
 function importar(e) {
@@ -483,6 +485,10 @@ onAuthStateChanged(auth, user => {
     // Autenticado: mostrar app, ocultar login
     loginScreen.style.display = 'none';
     appScreen.style.display   = 'block';
+
+    // Referencias dinámicas según el usuario logueado
+    REF_ALUMNOS = doc(db, 'usuarios', user.uid, 'datos', 'alumnos');
+    REF_CONFIG  = doc(db, 'usuarios', user.uid, 'datos', 'config');
 
     // Iniciar escucha en tiempo real
     _unsubAlumnos = onSnapshot(REF_ALUMNOS, snap => {

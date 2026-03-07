@@ -1,0 +1,597 @@
+[
+  {
+    "fechaAlta": "2026-03-05",
+    "id": 1772734095778,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Boragi Alejandro",
+    "fechaNacimiento": null,
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Roselli Marcela",
+    "fechaAlta": "2026-03-05",
+    "id": 1772734249976,
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "id": 1772734382991,
+    "fechaAlta": "2026-03-05",
+    "nombre": "Genaro Franco",
+    "ultimoPlanMes": null,
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": null,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Genaro Ale",
+    "fechaAlta": "2026-03-05",
+    "id": 1772734402449
+  },
+  {
+    "fechaAlta": "2026-03-05",
+    "id": 1772734417587,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Genaro Magali",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoMesPagado": null,
+    "fechaNacimiento": null,
+    "nombre": "Guevara Ana",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772734697411,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "nombre": "Poblet Andrea",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772735256352,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "fechaAlta": "2026-03-05",
+    "id": 1772735394353,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Velazques Andrea",
+    "fechaNacimiento": null
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "fechaAlta": "2026-03-05",
+    "id": 1772735470055,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Franck Anita",
+    "fechaNacimiento": null
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "id": 1772735618080,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Toledo Ariel",
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "id": 1772735652696,
+    "fechaAlta": "2026-03-05",
+    "nombre": "Ballario Bianca",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "id": 1772735682828,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Arguello Carolina",
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "ultimoMesPagado": null,
+    "fechaNacimiento": null,
+    "nombre": "Salinas Carolina",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772735711711,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Encimas Cecilia",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772735788967
+  },
+  {
+    "ultimoMesPagado": null,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Massaux cecilia",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772735943285
+  },
+  {
+    "fechaNacimiento": null,
+    "nombre": "Bolteau Adriana",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772736007329,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "fechaAlta": "2026-03-05",
+    "id": 1772736020124,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Bolteau Paola",
+    "fechaNacimiento": null,
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoMesPagado": null,
+    "id": 1772736066420,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Perez Cintia",
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Zabaleta Constansa",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772736248262,
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "nombre": "Verdugo Daiana",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772736300388,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Guatta Daiana",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772736333781
+  },
+  {
+    "id": 1772736361431,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Sosa Daiana",
+    "ultimoPlanMes": "2026-03",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "id": 1772736508386,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Maidana Daniela",
+    "ultimoPlanMes": "2026-03",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "nombre": "prieto Elena",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772736548091,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": null,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Villegas Estefania",
+    "fechaAlta": "2026-03-05",
+    "id": 1772736971258
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Ballario Fabiola",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772737013352
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "nombre": "Ballardoi Fabiana",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737090455,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "ultimoMesPagado": null,
+    "nombre": "Matios Franchisca",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737157161,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Casales Hector",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772737181715,
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": null,
+    "nombre": "Casales Jeni",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737193079,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "nombre": "Prado Joana",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737245620,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": null,
+    "id": 1772737275668,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Viglione Jorgelina",
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "fechaAlta": "2026-03-05",
+    "id": 1772737386123,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Iman Jose y Laura",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "nombre": "llabur Lara",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737448581,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "ultimoMesPagado": null,
+    "fechaNacimiento": null,
+    "nombre": "Gallo lorena",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737518564,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "nombre": "Arias Lucia",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737542245,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "id": 1772737587254,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Albornoz Luciana",
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "fechaNacimiento": null,
+    "nombre": "Somosa Marcela",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737621145,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoMesPagado": null,
+    "id": 1772737664042,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Roldan marcelo",
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "nombre": "Cufre Marcos",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772737701262,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Castro Mariela",
+    "fechaAlta": "2026-03-05",
+    "id": 1772737819992,
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Urquiza Mariela",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772737878797,
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "fechaAlta": "2026-03-05",
+    "id": 1772737989134,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Medina Martin"
+  },
+  {
+    "ultimoMesPagado": null,
+    "fechaNacimiento": null,
+    "nombre": "Martinez Noe",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772738037100,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "fechaAlta": "2026-03-05",
+    "id": 1772738115727,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Lopez Matias",
+    "ultimoMesPagado": null
+  },
+  {
+    "fechaAlta": "2026-03-05",
+    "id": 1772738135624,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Lopez Mayra",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Piñero Anabella",
+    "fechaAlta": "2026-03-05",
+    "id": 1772738293442,
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "fechaAlta": "2026-03-05",
+    "id": 1772738359498,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Farias Micaela",
+    "fechaNacimiento": null,
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": null,
+    "id": 1772738374859,
+    "fechaAlta": "2026-03-05",
+    "nombre": "Figueroa Micaela",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "ultimoMesPagado": null,
+    "id": 1772738557038,
+    "fechaAlta": "2026-03-05",
+    "nombre": "Sain Micaela",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Medina Natalia",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772738747866
+  },
+  {
+    "fechaAlta": "2026-03-05",
+    "id": 1772738797536,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Quiroga Natalia",
+    "fechaNacimiento": null,
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoMesPagado": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772740145907,
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Pereyra Natalia",
+    "fechaNacimiento": null
+  },
+  {
+    "id": 1772740171994,
+    "fechaAlta": "2026-03-05",
+    "nombre": "Damico nina",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": null,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Sanches Noe",
+    "fechaAlta": "2026-03-05",
+    "id": 1772740243931
+  },
+  {
+    "id": 1772740256633,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Sanches Caterina",
+    "ultimoPlanMes": "2026-03",
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772740310690,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Sandoval Pablo"
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "fechaAlta": "2026-03-05",
+    "id": 1772740352052,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Moreno Paula"
+  },
+  {
+    "fechaNacimiento": null,
+    "nombre": "Moreno Valeria",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772740362676,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoMesPagado": null,
+    "nombre": "Gimenez Patricia",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772740412881,
+    "fechaAlta": "2026-03-05"
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Manrrique Paula",
+    "fechaAlta": "2026-03-05",
+    "id": 1772740490676,
+    "ultimoMesPagado": null
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Torres Paula",
+    "fechaAlta": "2026-03-05",
+    "id": 1772740513009
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "nombre": "Actis Rosana",
+    "fechaNacimiento": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772740600793,
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "id": 1772740748907,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Ortiz Romina",
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "ultimoMesPagado": null,
+    "fechaAlta": "2026-03-05",
+    "id": 1772740784790,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Romero Romina"
+  },
+  {
+    "ultimoMesPagado": null,
+    "id": 1772740805447,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Roldan Martina",
+    "ultimoPlanMes": "2026-03"
+  },
+  {
+    "fechaNacimiento": null,
+    "nombre": "Gamboa Rosa",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772740835290,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": null
+  },
+  {
+    "id": 1772740866521,
+    "fechaAlta": "2026-03-05",
+    "fechaNacimiento": null,
+    "nombre": "Leguizamon Roxana",
+    "ultimoPlanMes": "2026-03",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "nombre": "Villalo Susana",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "id": 1772740971492,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "nombre": "CabañAs Yanina",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": null,
+    "id": 1772741031985,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": null
+  },
+  {
+    "fechaNacimiento": null,
+    "nombre": "Millahueque Yesica",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772741052238,
+    "fechaAlta": "2026-03-05",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Laguna Oscar",
+    "fechaAlta": "2026-03-06",
+    "id": 1772829083088,
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "ultimoMesPagado": "2026-03",
+    "fechaAlta": "2026-03-06",
+    "id": 1772829555409,
+    "ultimoPlanMes": "2026-03",
+    "fechaNacimiento": null,
+    "nombre": "Millague Maira"
+  },
+  {
+    "id": 1772829640905,
+    "fechaAlta": "2026-03-06",
+    "nombre": "Cuello Anto",
+    "fechaNacimiento": null,
+    "ultimoPlanMes": "2026-03",
+    "ultimoMesPagado": "2026-03"
+  },
+  {
+    "fechaNacimiento": null,
+    "nombre": "Lopez Tere",
+    "ultimoPlanMes": "2026-03",
+    "id": 1772829804299,
+    "fechaAlta": "2026-03-06",
+    "ultimoMesPagado": "2026-03"
+  }
+]

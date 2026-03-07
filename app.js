@@ -168,7 +168,6 @@ function renderAlumnos() {
 
 // ─── RENDER RESUMEN ──────────────────────────────────────────────────────────
 function renderResumen() {
-  // Actualizar header con nombre y colores del grupo
   const elHeader = document.getElementById('header-grupo-nombre');
   if (elHeader) elHeader.innerHTML = renderNombreGrupo(_config);
 
@@ -184,38 +183,33 @@ function renderResumen() {
   const esperado     = total * precio;
   const ingresado    = pagaron * precio;
   const pctPlan      = total ? Math.round((planEnviadas / total) * 100) : 0;
-  const pctPago      = total ? Math.round((pagaron / total) * 100) : 0;
+  const pctPago      = total ? Math.round((pagaron      / total) * 100) : 0;
   const $fmt = n => precio > 0 ? '$' + n.toLocaleString('es-AR') : '—';
 
-  // Donut pagos (verde)
-  const r = 36, cx = 44, cy = 44, stroke = 10;
-  const circ = 2 * Math.PI * r;
-  const dash = total > 0 ? (pagaron / total) * circ : 0;
+  // ── Donut helper ──────────────────────────────────────────────────────────
+  // Arranca a las 12, sentido antihorario
+  function makeDonut(valor, tot, color) {
+    const r    = 36, cx = 44, cy = 44, sw = 10;
+    const circ = 2 * Math.PI * r;
+    const fill  = tot > 0 ? (valor / tot) * circ : 0;
+    const empty = circ - fill;
+    // rotate(-90) pone el origen a las 12
+    // scale(1,-1) invierte el eje Y → sentido antihorario
+    return `
+      <svg width="88" height="88" viewBox="0 0 88 88">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+          stroke="#2a2a2a" stroke-width="${sw}"/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+          stroke="${color}" stroke-width="${sw}"
+          stroke-dasharray="${fill} ${empty}"
+          stroke-dashoffset="0"
+          stroke-linecap="round"
+          transform="rotate(-90 ${cx} ${cy}) scale(1 -1) translate(0 -88)"/>
+      </svg>`;
+  }
 
-  const gap = circ - dash;
-  const donut = `
-    <svg width="88" height="88" viewBox="0 0 88 88">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
-        stroke="#2a2a2a" stroke-width="${stroke}"/>
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
-        stroke="#4ade80" stroke-width="${stroke}"
-        stroke-dasharray="${dash} ${gap}"
-        stroke-dashoffset="${circ / 4 * -1}"
-        stroke-linecap="round"/>
-    </svg>`;
-
-  // Donut planificaciones (violeta)
-  const dashPlan = total > 0 ? (planEnviadas / total) * circ : 0;
-  const donutPlan = `
-    <svg width="88" height="88" viewBox="0 0 88 88">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
-        stroke="#2a2a2a" stroke-width="${stroke}"/>
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
-        stroke="#a78bfa" stroke-width="${stroke}"
-        stroke-dasharray="${dashPlan} ${circ}"
-        stroke-dashoffset="${circ / 4}"
-        stroke-linecap="round"/>
-    </svg>`;
+  const donut     = makeDonut(pagaron,      total, '#4ade80');
+  const donutPlan = makeDonut(planEnviadas, total, '#a78bfa');
 
   document.getElementById('resumen-content').innerHTML = `
   <div id="resumen-inner">

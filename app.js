@@ -192,14 +192,15 @@ function renderResumen() {
   const circ = 2 * Math.PI * r;
   const dash = total > 0 ? (pagaron / total) * circ : 0;
 
+  const gap = circ - dash;
   const donut = `
     <svg width="88" height="88" viewBox="0 0 88 88">
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
         stroke="#2a2a2a" stroke-width="${stroke}"/>
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
         stroke="#4ade80" stroke-width="${stroke}"
-        stroke-dasharray="${dash} ${circ}"
-        stroke-dashoffset="${circ / 4}"
+        stroke-dasharray="${dash} ${gap}"
+        stroke-dashoffset="${circ / 4 * -1}"
         stroke-linecap="round"/>
     </svg>`;
 

@@ -138,7 +138,10 @@
 <!-- MODAL CONFIGURACIÓN -->
 <div class="overlay" id="config-overlay">
   <div class="modal">
-    <div class="modal-title">⚙ CONFIGURACIÓN</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div class="modal-title" style="margin-bottom:0;">⚙ CONFIGURACIÓN</div>
+      <button id="config-cerrar-x" style="background:none;border:none;color:#444;font-size:1.2rem;cursor:pointer;line-height:1;padding:4px 8px;transition:color .15s;" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#444'">✕</button>
+    </div>
 
     <span class="config-label">Precio mensual por alumno ($)</span>
     <input type="number" id="config-precio" placeholder="Ej: 12000">
@@ -169,7 +172,6 @@
       <input type="range" id="config-split" min="0" max="20" value="0" class="config-slider">
       <span class="config-slider-val" id="config-split-val">0</span>
     </div>
-
 
     <span class="config-label">Backup de datos</span>
     <div style="display:flex;gap:10px;margin-bottom:24px;">

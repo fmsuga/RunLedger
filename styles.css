@@ -491,7 +491,16 @@ header {
 #confirm-no { background: var(--border); color: var(--text); }
 
 /* ── MODAL CONFIGURACIÓN ── */
-#config-overlay .modal { max-height: 90vh; overflow-y: auto; }
+#config-overlay {
+  align-items: center;
+}
+
+#config-overlay .modal {
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 22px;
+  margin-bottom: 5vh;
+}
 
 .config-label {
   font-size: .72rem;
@@ -500,6 +509,7 @@ header {
   text-transform: uppercase;
   letter-spacing: .07em;
   margin-bottom: 8px;
+  margin-top: 20px;
   display: block;
 }
 

@@ -498,6 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-confirmar')  ?.addEventListener('click', confirmarAgregar);
   document.getElementById('btn-config')     ?.addEventListener('click', abrirConfig);
   document.getElementById('config-cancelar')?.addEventListener('click', cerrarConfig);
+  document.getElementById('config-cerrar-x')?.addEventListener('click', cerrarConfig);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') cerrarConfig();
+  });
   document.getElementById('config-guardar') ?.addEventListener('click', guardarConfigModal);
   document.getElementById('config-nombre')  ?.addEventListener('input', actualizarPreview);
   document.getElementById('config-split')   ?.addEventListener('input', actualizarPreview);

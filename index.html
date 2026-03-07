@@ -44,15 +44,14 @@
   <!-- Header dos columnas -->
   <div class="logo-bar">
     <div class="logo-col">
-      <img src="media/logo.png" alt="Deltarunners" class="logo-imagen">
+      <img src="logos/logo_default.png" alt="logo" id="logo-imagen" class="logo-imagen">
     </div>
     <div class="logo-nombre-col">
       <div class="logo-nombre" id="header-grupo-nombre">Mi grupo</div>
     </div>
     <div class="logo-acciones">
       <div class="header-actions">
-        <button class="icon-btn" id="btn-precio">⚙ Precio</button>
-        <button class="icon-btn" id="btn-grupo">✏️ Grupo</button>
+        <button class="icon-btn" id="btn-config">⚙ Config</button>
         <button class="icon-btn" id="btn-exportar">↓</button>
         <button class="icon-btn" id="btn-importar">↑</button>
         <button class="icon-btn" id="btn-salir" style="color:#f87171;">Salir</button>
@@ -143,6 +142,49 @@
     </div>
   </div>
 </div>
+
+<!-- MODAL CONFIGURACIÓN -->
+<div class="overlay" id="config-overlay">
+  <div class="modal">
+    <div class="modal-title">⚙ CONFIGURACIÓN</div>
+
+    <span class="config-label">Precio mensual por alumno ($)</span>
+    <input type="number" id="config-precio" placeholder="Ej: 12000">
+
+    <span class="config-label">Nombre del grupo</span>
+    <input type="text" id="config-nombre" placeholder="Ej: Deltarunners">
+
+    <span class="config-label">Colores del nombre</span>
+    <div class="config-colores-row">
+      <div class="config-color-item">
+        <span>Color 1</span>
+        <input type="color" id="config-color1" value="#60a5fa">
+      </div>
+      <div class="config-color-item">
+        <span>Color 2</span>
+        <input type="color" id="config-color2" value="#fb923c">
+      </div>
+    </div>
+
+    <div class="config-split-wrap">
+      <div class="config-split-desc">
+        <strong>¿Cuántas letras van de color 1?</strong><br>        
+      </div>
+      <input type="number" id="config-split" min="1" max="30" class="config-split-input" placeholder="5">
+    </div>
+
+    <div class="config-preview-wrap">
+      <div class="config-preview-label">Así se verá</div>
+      <div id="config-preview">Preview</div>
+    </div>
+
+    <div class="config-btns">
+      <button class="modal-btn secundario" id="config-cancelar">Cancelar</button>
+      <button class="modal-btn primario"   id="config-guardar">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 
 <script type="module" src="app.js"></script>
 </body>

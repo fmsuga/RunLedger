@@ -61,6 +61,20 @@ async function guardarConfig(cfg) {
   await setDoc(REF_CONFIG, cfg);
 }
 
+// ─── HELPER: renderizar nombre del grupo con colores ─────────────────────────
+function renderNombreGrupo(cfg) {
+  const nombre = cfg.nombreGrupo || 'Mi grupo';
+  const split  = cfg.grupoSplit  != null ? cfg.grupoSplit : nombre.length;
+  const color1 = cfg.grupoColor1 || '#60a5fa';
+  const color2 = cfg.grupoColor2 || '#fb923c';
+  const p1 = nombre.slice(0, split);
+  const p2 = nombre.slice(split);
+  if (p2) {
+    return `<span style="color:${color1}">${p1}</span><span style="color:${color2}">${p2}</span>`;
+  }
+  return `<span style="color:${color1}">${p1}</span>`;
+}
+
 // ─── DATOS ───────────────────────────────────────────────────────────────────
 async function agregarAlumno(nombre, fechaNac) {
   await guardarAlumnos([..._alumnos, {
@@ -154,8 +168,10 @@ function renderAlumnos() {
 
 // ─── RENDER RESUMEN ──────────────────────────────────────────────────────────
 function renderResumen() {
-  const el = document.getElementById('header-grupo-nombre');
-  if (el) el.textContent = _config.nombreGrupo || 'Mi grupo';
+  // Actualizar header con nombre y colores del grupo
+  const elHeader = document.getElementById('header-grupo-nombre');
+  if (elHeader) elHeader.innerHTML = renderNombreGrupo(_config);
+
   const precio = _config.precio || 0;
   const mes    = getMesActual();
   const data   = _alumnos;
@@ -205,7 +221,7 @@ function renderResumen() {
 
     <!-- LOGO -->
     <div class="rs-logo-row">
-      <div class="rs-logo-name">${_config.nombreGrupo || 'Mi grupo'}</div>
+      <div class="rs-logo-name">${renderNombreGrupo(_config)}</div>
       <div class="rs-logo-sub">Resumen mensual</div>
     </div>
 
@@ -390,18 +406,44 @@ function cambiarTab(tab) {
   document.getElementById('tab-' + tab)?.classList.add('active');
 }
 
-// ─── PRECIO Y GRUPO ───────────────────────────────────────────────────────────
-async function configurarPrecio() {
-  const nuevo = prompt('Precio mensual por alumno ($):', _config.precio || '');
-  if (nuevo === null) return;
-  await guardarConfig({ ..._config, precio: Number(nuevo) });
-  renderResumen();
+// ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
+function actualizarPreview() {
+  const nombre = document.getElementById('config-nombre').value || 'Mi grupo';
+  const split  = parseInt(document.getElementById('config-split').value);
+  const color1 = document.getElementById('config-color1').value;
+  const color2 = document.getElementById('config-color2').value;
+  const cfg    = {
+    nombreGrupo: nombre,
+    grupoSplit:  isNaN(split) ? null : split,
+    grupoColor1: color1,
+    grupoColor2: color2
+  };
+  document.getElementById('config-preview').innerHTML = renderNombreGrupo(cfg);
 }
 
-async function configurarGrupo() {
-  const nuevo = prompt('Nombre del grupo:', _config.nombreGrupo || '');
-  if (nuevo === null || nuevo.trim() === '') return;
-  await guardarConfig({ ..._config, nombreGrupo: nuevo.trim() });
+function abrirConfig() {
+  document.getElementById('config-precio').value = _config.precio       || '';
+  document.getElementById('config-nombre').value = _config.nombreGrupo  || '';
+  document.getElementById('config-split').value  = _config.grupoSplit   != null ? _config.grupoSplit : '';
+  document.getElementById('config-color1').value = _config.grupoColor1  || '#60a5fa';
+  document.getElementById('config-color2').value = _config.grupoColor2  || '#fb923c';
+  actualizarPreview();
+  document.getElementById('config-overlay').classList.add('open');
+}
+
+function cerrarConfig() {
+  document.getElementById('config-overlay').classList.remove('open');
+}
+
+async function guardarConfigModal() {
+  const precio      = Number(document.getElementById('config-precio').value) || 0;
+  const nombreGrupo = document.getElementById('config-nombre').value.trim() || 'Mi grupo';
+  const splitVal    = parseInt(document.getElementById('config-split').value);
+  const grupoSplit  = isNaN(splitVal) ? null : splitVal;
+  const grupoColor1 = document.getElementById('config-color1').value;
+  const grupoColor2 = document.getElementById('config-color2').value;
+  await guardarConfig({ precio, nombreGrupo, grupoSplit, grupoColor1, grupoColor2 });
+  cerrarConfig();
   renderResumen();
 }
 
@@ -448,8 +490,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-agregar')    ?.addEventListener('click', abrirModal);
   document.getElementById('btn-cancelar')   ?.addEventListener('click', cerrarModal);
   document.getElementById('btn-confirmar')  ?.addEventListener('click', confirmarAgregar);
-  document.getElementById('btn-precio')     ?.addEventListener('click', configurarPrecio);
-  document.getElementById('btn-grupo')      ?.addEventListener('click', configurarGrupo);
+  document.getElementById('btn-config')     ?.addEventListener('click', abrirConfig);
+  document.getElementById('config-cancelar')?.addEventListener('click', cerrarConfig);
+  document.getElementById('config-guardar') ?.addEventListener('click', guardarConfigModal);
+  document.getElementById('config-nombre')  ?.addEventListener('input', actualizarPreview);
+  document.getElementById('config-split')   ?.addEventListener('input', actualizarPreview);
+  document.getElementById('config-color1')  ?.addEventListener('input', actualizarPreview);
+  document.getElementById('config-color2')  ?.addEventListener('input', actualizarPreview);
   document.getElementById('btn-exportar')   ?.addEventListener('click', exportar);
   document.getElementById('btn-importar')   ?.addEventListener('click', () => document.getElementById('importFile').click());
   document.getElementById('importFile')     ?.addEventListener('change', importar);
@@ -490,7 +537,7 @@ let _unsubConfig  = null;
 onAuthStateChanged(auth, user => {
   const loginScreen = document.getElementById('login-screen');
   const appScreen   = document.getElementById('app-screen');
-
+  
   if (user) {
     // Autenticado: mostrar app, ocultar login
     loginScreen.style.display = 'none';
@@ -499,6 +546,11 @@ onAuthStateChanged(auth, user => {
     // Referencias dinámicas según el usuario logueado
     REF_ALUMNOS = doc(db, 'usuarios', user.uid, 'datos', 'alumnos');
     REF_CONFIG  = doc(db, 'usuarios', user.uid, 'datos', 'config');
+    const logoEl = document.getElementById('logo-imagen');
+    if (logoEl) {
+      logoEl.src = `logos/logo_${user.uid}.png`;
+      logoEl.onerror = () => { logoEl.src = 'logos/logo_default.png'; };
+    }
 
     // Iniciar escucha en tiempo real
     _unsubAlumnos = onSnapshot(REF_ALUMNOS, snap => {

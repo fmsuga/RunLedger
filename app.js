@@ -154,6 +154,8 @@ function renderAlumnos() {
 
 // ─── RENDER RESUMEN ──────────────────────────────────────────────────────────
 function renderResumen() {
+  const el = document.getElementById('header-grupo-nombre');
+  if (el) el.textContent = _config.nombreGrupo || 'Mi grupo';
   const precio = _config.precio || 0;
   const mes    = getMesActual();
   const data   = _alumnos;
@@ -203,7 +205,7 @@ function renderResumen() {
 
     <!-- LOGO -->
     <div class="rs-logo-row">
-      <div class="rs-logo-name">Deltarunners</div>
+      <div class="rs-logo-name">${_config.nombreGrupo || 'Mi grupo'}</div>
       <div class="rs-logo-sub">Resumen mensual</div>
     </div>
 
@@ -388,11 +390,18 @@ function cambiarTab(tab) {
   document.getElementById('tab-' + tab)?.classList.add('active');
 }
 
-// ─── PRECIO ──────────────────────────────────────────────────────────────────
+// ─── PRECIO Y GRUPO ───────────────────────────────────────────────────────────
 async function configurarPrecio() {
   const nuevo = prompt('Precio mensual por alumno ($):', _config.precio || '');
   if (nuevo === null) return;
-  await guardarConfig({ precio: Number(nuevo) });
+  await guardarConfig({ ..._config, precio: Number(nuevo) });
+  renderResumen();
+}
+
+async function configurarGrupo() {
+  const nuevo = prompt('Nombre del grupo:', _config.nombreGrupo || '');
+  if (nuevo === null || nuevo.trim() === '') return;
+  await guardarConfig({ ..._config, nombreGrupo: nuevo.trim() });
   renderResumen();
 }
 
@@ -440,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-cancelar')   ?.addEventListener('click', cerrarModal);
   document.getElementById('btn-confirmar')  ?.addEventListener('click', confirmarAgregar);
   document.getElementById('btn-precio')     ?.addEventListener('click', configurarPrecio);
+  document.getElementById('btn-grupo')      ?.addEventListener('click', configurarGrupo);
   document.getElementById('btn-exportar')   ?.addEventListener('click', exportar);
   document.getElementById('btn-importar')   ?.addEventListener('click', () => document.getElementById('importFile').click());
   document.getElementById('importFile')     ?.addEventListener('change', importar);

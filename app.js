@@ -409,7 +409,9 @@ function cambiarTab(tab) {
 // ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
 function actualizarPreview() {
   const nombre = document.getElementById('config-nombre').value || 'Mi grupo';
+  document.getElementById('config-split').max = nombre.length;
   const split  = parseInt(document.getElementById('config-split').value);
+  document.getElementById('config-split-val').textContent = isNaN(split) ? 0 : split;
   const color1 = document.getElementById('config-color1').value;
   const color2 = document.getElementById('config-color2').value;
   const cfg    = {
@@ -424,7 +426,11 @@ function actualizarPreview() {
 function abrirConfig() {
   document.getElementById('config-precio').value = _config.precio       || '';
   document.getElementById('config-nombre').value = _config.nombreGrupo  || '';
-  document.getElementById('config-split').value  = _config.grupoSplit   != null ? _config.grupoSplit : '';
+  const splitVal = _config.grupoSplit != null ? _config.grupoSplit : 0;
+  const nombreActual = document.getElementById('config-nombre').value || _config.nombreGrupo || '';
+  document.getElementById('config-split').max = nombreActual.length || 20;
+  document.getElementById('config-split').value = splitVal;
+  document.getElementById('config-split-val').textContent = splitVal;
   document.getElementById('config-color1').value = _config.grupoColor1  || '#60a5fa';
   document.getElementById('config-color2').value = _config.grupoColor2  || '#fb923c';
   actualizarPreview();

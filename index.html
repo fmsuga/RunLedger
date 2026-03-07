@@ -4,12 +4,312 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profe Tracker</title>
-
 <link rel="icon" type="image/png" href="media/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<style>
 
+/* ── MODAL BASE (centrado, con acento de color) ── */
+.pt-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.82);
+  z-index: 40;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80px 20px 40px;
+  overflow-y: auto;
+}
+.pt-overlay.open { display: flex; }
+
+.pt-modal {
+  background: #181818;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  animation: slideUp .22s ease;
+  border: 1px solid #252525;
+  flex-shrink: 0;
+}
+
+/* Franja de color arriba del modal */
+.pt-modal-bar {
+  height: 4px;
+  width: 100%;
+}
+.bar-blue   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.bar-green  { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.bar-purple { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.bar-orange { background: linear-gradient(90deg, #f97316, #fb923c); }
+
+.pt-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 0;
+}
+.pt-modal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #555;
+}
+.pt-modal-close {
+  background: none;
+  border: none;
+  color: #3a3a3a;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  transition: color .15s;
+  border-radius: 6px;
+}
+.pt-modal-close:hover { color: #aaa; background: #222; }
+
+.pt-modal-body { padding: 18px 20px 0; }
+
+.pt-label {
+  font-size: .7rem;
+  font-weight: 700;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  display: block;
+  margin-bottom: 7px;
+}
+.pt-label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-bottom: 7px;
+}
+.pt-label-row .pt-label { margin-bottom: 0; }
+.pt-optional {
+  font-size: .7rem;
+  color: #333;
+  font-weight: 500;
+}
+.pt-hint {
+  font-size: .76rem;
+  color: #2d5a8e;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pt-input {
+  width: 100%;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 13px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: .98rem;
+  color: #f0f0f0;
+  outline: none;
+  transition: border-color .2s;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+}
+.pt-input:focus  { border-color: #444; }
+.pt-input::placeholder { color: #333; }
+
+.pt-modal-footer {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pt-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+}
+.pt-btn {
+  padding: 13px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-size: .92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+}
+.pt-btn:active { transform: scale(.97); }
+.pt-btn:hover  { opacity: .85; }
+.pt-btn-primary   { background: #f0f0f0; color: #111; }
+.pt-btn-secondary { background: #222; color: #666; border: 1px solid #2a2a2a; }
+.pt-btn-danger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px;
+  border-radius: 12px;
+  border: 1px solid #252525;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #444;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.pt-btn-danger:hover {
+  color: #f87171;
+  border-color: rgba(248,113,113,.3);
+  background: rgba(248,113,113,.06);
+}
+.pt-divider {
+  height: 1px;
+  background: #1e1e1e;
+  margin: 4px 0;
+}
+
+/* ── CONFIRM MODALS (pago / plan) — centrados ── */
+.pt-confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.82);
+  z-index: 40;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.pt-confirm-overlay.open { display: flex; }
+.pt-confirm-box {
+  background: #181818;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 340px;
+  overflow: hidden;
+  animation: slideUp .22s ease;
+  border: 1px solid #252525;
+  text-align: center;
+}
+.pt-confirm-icon {
+  font-size: 2rem;
+  padding: 24px 20px 8px;
+}
+.pt-confirm-msg {
+  font-size: .98rem;
+  color: #aaa;
+  padding: 0 20px 20px;
+  line-height: 1.5;
+}
+.pt-confirm-name {
+  color: #f0f0f0;
+  font-weight: 700;
+}
+.pt-confirm-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #1e1e1e;
+}
+.pt-confirm-btns button {
+  padding: 16px;
+  border: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+.pt-confirm-btns button:first-child {
+  color: #555;
+  border-right: 1px solid #1e1e1e;
+  border-radius: 0 0 0 20px;
+}
+.pt-confirm-btns button:first-child:hover { background: #1e1e1e; }
+.pt-confirm-btns button:last-child { border-radius: 0 0 20px 0; }
+
+/* ── SELECTOR SUBGRUPO ── */
+.subgrupo-wrap {
+  padding: 12px 16px 0;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subgrupo-wrap::-webkit-scrollbar { display: none; }
+#subgrupo-pills {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.sub-pill {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  border: 1.5px solid #2a2a2a;
+  background: #1a1a1a;
+  overflow: hidden;
+  transition: border-color .15s, background .15s;
+  flex-shrink: 0;
+}
+.sub-pill.active { border-color: #60a5fa; background: rgba(96,165,250,.1); }
+.sub-pill:not(.active):hover { border-color: #444; background: #222; }
+.sub-pill-label {
+  padding: 10px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: .88rem;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s;
+  user-select: none;
+  line-height: 1;
+}
+.sub-pill.active .sub-pill-label { color: #93c5fd; }
+.sub-pill:not(.active):hover .sub-pill-label { color: #aaa; }
+.sub-pill-edit {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 36px;
+  background: rgba(96,165,250,.12);
+  border: none;
+  border-left: 1.5px solid rgba(96,165,250,.25);
+  color: #60a5fa;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  flex-shrink: 0;
+}
+.sub-pill.active .sub-pill-edit { display: flex; }
+.sub-pill-edit:hover { background: rgba(96,165,250,.25); color: #bfdbfe; }
+.sub-pill-nuevo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px dashed #2a2a2a;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: .88rem;
+  font-weight: 600;
+  color: #444;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+  line-height: 1;
+}
+.sub-pill-nuevo:hover { border-color: #60a5fa; color: #60a5fa; background: rgba(96,165,250,.06); }
+</style>
 </head>
 <body>
 
@@ -26,15 +326,14 @@
   </div>
 </div>
 
-<!-- APP (oculta hasta autenticar) -->
+<!-- APP -->
 <div id="app-screen" style="display:none;">
-  <!-- Header dos columnas -->
   <div class="logo-bar">
     <div class="logo-col">
       <img src="logos/logo_default.png" alt="logo" id="logo-imagen" class="logo-imagen">
     </div>
     <div class="logo-nombre-col">
-      <div class="logo-nombre" id="header-grupo-nombre">Mi grupo</div>
+      <div class="logo-nombre" id="header-grupo-nombre">Mi agrupación</div>
     </div>
     <div class="logo-acciones">
       <div class="header-actions">
@@ -55,137 +354,213 @@
     <div class="tab active" id="tab-alumnos">Alumnos</div>
     <div class="tab"        id="tab-resumen">Resumen</div>
   </div>
-</header>
-
-<!-- ALUMNOS -->
-<div id="alumnos" class="section active">
-  <div class="buscar-wrap">
-    <input type="search" id="buscar" placeholder="Buscar alumno..." oninput="renderAlumnos()" autocomplete="off" />
+  <div id="alumnos" class="section active">
+    <div class="subgrupo-wrap" id="subgrupo-wrap">
+      <div id="subgrupo-pills"></div>
+    </div>
+    <div class="buscar-wrap">
+      <input type="search" id="buscar" placeholder="Buscar alumno..." autocomplete="off" />
+    </div>
+    <div id="lista"></div>
+    <button id="btn-agregar">+ Nuevo alumno</button>
   </div>
-  <div id="lista"></div>
-  <button id="btn-agregar">+ Nuevo alumno</button>
+  <div id="resumen" class="section">
+    <div id="resumen-content"></div>
+  </div>
 </div>
 
-<!-- RESUMEN -->
-<div id="resumen" class="section">
-  <div id="resumen-content"></div>
-</div>
-
-<!-- Modal agregar -->
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <div class="modal-title">NUEVO ALUMNO</div>
-    <input type="text" id="input-nombre" placeholder="Nombre completo" maxlength="60" />
-    <input type="date" id="input-fnac" style="margin-bottom:0" />
-    <div style="font-size:.75rem;color:#666;margin:-10px 0 16px;padding-left:4px;">Fecha de nacimiento (opcional)</div>
-    <div class="modal-btns">
-      <button id="btn-cancelar">Cancelar</button>
-      <button id="btn-confirmar">Agregar</button>
+<!-- ═══ MODAL: Nuevo alumno (azul) ═══ -->
+<div class="pt-overlay" id="overlay">
+  <div class="pt-modal">
+    <div class="pt-modal-bar bar-blue"></div>
+    <div class="pt-modal-head">
+      <span class="pt-modal-title">Nuevo alumno</span>
+      <button class="pt-modal-close" id="btn-cancelar">✕</button>
+    </div>
+    <div class="pt-modal-body">
+      <label class="pt-label">Nombre</label>
+      <input class="pt-input" type="text" id="input-nombre" placeholder="Nombre completo" maxlength="60" />
+      <div class="pt-label-row">
+        <span class="pt-label">Fecha de nacimiento</span>
+        <span class="pt-optional">opcional</span>
+      </div>
+      <input class="pt-input" type="date" id="input-fnac" style="margin-bottom:0" />
+    </div>
+    <div class="pt-modal-footer">
+      <div class="pt-btn-row">
+        <button class="pt-btn pt-btn-secondary" id="btn-cancelar-2">Cancelar</button>
+        <button class="pt-btn pt-btn-primary"   id="btn-confirmar">Agregar alumno</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Modal confirm pago -->
-<div class="confirm-overlay" id="confirm-overlay">
-  <div class="confirm-box">
-    <div class="confirm-icon">✅</div>
-    <div class="confirm-msg">¿Confirmás el pago de<br><span class="confirm-name" id="confirm-nombre"></span>?</div>
-    <div class="confirm-btns">
+<!-- ═══ MODAL: Perfil alumno (azul) ═══ -->
+<div class="pt-overlay" id="perfil-overlay">
+  <div class="pt-modal">
+    <div class="pt-modal-bar bar-blue"></div>
+    <div class="pt-modal-head">
+      <span class="pt-modal-title" id="perfil-titulo">Perfil</span>
+      <button class="pt-modal-close" id="perfil-cancelar-x">✕</button>
+    </div>
+    <div class="pt-modal-body">
+      <label class="pt-label">Nombre</label>
+      <input class="pt-input" type="text" id="perfil-nombre" maxlength="60" />
+      <label class="pt-label">Fecha de nacimiento</label>
+      <input class="pt-input" type="date" id="perfil-fnac" style="margin-bottom:0" />
+    </div>
+    <div class="pt-modal-footer">
+      <div class="pt-btn-row">
+        <button class="pt-btn pt-btn-secondary" id="perfil-cancelar">Cancelar</button>
+        <button class="pt-btn pt-btn-primary"   id="perfil-guardar">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Nuevo subgrupo (azul) ═══ -->
+<div class="pt-overlay" id="nuevo-sub-overlay">
+  <div class="pt-modal">
+    <div class="pt-modal-bar bar-blue"></div>
+    <div class="pt-modal-head">
+      <span class="pt-modal-title">Nuevo subgrupo</span>
+      <button class="pt-modal-close" id="nuevo-sub-cerrar-x">✕</button>
+    </div>
+    <div class="pt-modal-body">
+      <label class="pt-label">Nombre</label>
+      <input class="pt-input" type="text" id="nuevo-sub-nombre" placeholder="Ej: Running, Funcional..." maxlength="40" />
+      <div class="pt-label-row">
+        <span class="pt-label">Precio específico</span>
+        <span class="pt-optional">opcional</span>
+      </div>
+      <div id="nuevo-sub-precio-label" class="pt-hint"></div>
+      <input class="pt-input" type="number" id="nuevo-sub-precio" placeholder="Vacío = usa el precio global" style="margin-bottom:0" />
+    </div>
+    <div class="pt-modal-footer">
+      <div class="pt-btn-row">
+        <button class="pt-btn pt-btn-secondary" id="nuevo-sub-cancelar">Cancelar</button>
+        <button class="pt-btn pt-btn-primary"   id="nuevo-sub-confirmar">Crear subgrupo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Editar subgrupo (azul) ═══ -->
+<div class="pt-overlay" id="edit-sub-overlay">
+  <div class="pt-modal">
+    <div class="pt-modal-bar bar-blue"></div>
+    <div class="pt-modal-head">
+      <span class="pt-modal-title">Editar subgrupo</span>
+      <button class="pt-modal-close" id="edit-sub-cerrar-x">✕</button>
+    </div>
+    <div class="pt-modal-body">
+      <label class="pt-label">Nombre</label>
+      <input class="pt-input" type="text" id="edit-sub-nombre" placeholder="Ej: Running, Funcional..." maxlength="40" />
+      <div class="pt-label-row">
+        <span class="pt-label">Precio específico</span>
+        <span class="pt-optional">opcional</span>
+      </div>
+      <div id="edit-sub-precio-hint" class="pt-hint"></div>
+      <input class="pt-input" type="number" id="edit-sub-precio" placeholder="Vacío = usa el precio global" style="margin-bottom:0" />
+    </div>
+    <div class="pt-modal-footer">
+      <div class="pt-btn-row">
+        <button class="pt-btn pt-btn-secondary" id="edit-sub-cancelar">Cancelar</button>
+        <button class="pt-btn pt-btn-primary"   id="edit-sub-guardar">Guardar cambios</button>
+      </div>
+      <div class="pt-divider"></div>
+      <button class="pt-btn-danger" id="edit-sub-eliminar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+        Eliminar subgrupo
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Configuración (naranja) ═══ -->
+<div class="pt-overlay" id="config-overlay">
+  <div class="pt-modal" style="max-width:500px;">
+    <div class="pt-modal-bar bar-orange"></div>
+    <div class="pt-modal-head">
+      <span class="pt-modal-title">Configuración</span>
+      <button class="pt-modal-close" id="config-cerrar-x">✕</button>
+    </div>
+    <div class="pt-modal-body">
+
+      <label class="pt-label">Nombre de la agrupación</label>
+      <input class="pt-input" type="text" id="config-nombre" placeholder="Ej: Deltarunners">
+
+      <label class="pt-label" style="margin-top:4px;">Colores del nombre</label>
+      <div class="config-colores-preview-row">
+        <div class="config-colores-row">
+          <div class="config-color-item">
+            <span>Color 1</span>
+            <input type="color" id="config-color1" value="#60a5fa">
+          </div>
+          <div class="config-color-item">
+            <span>Color 2</span>
+            <input type="color" id="config-color2" value="#fb923c">
+          </div>
+        </div>
+        <div class="config-preview-wrap">
+          <div class="config-preview-label">Así se verá</div>
+          <div id="config-preview">Preview</div>
+        </div>
+      </div>
+
+      <label class="pt-label">Letras de color 1</label>
+      <div class="config-slider-wrap">
+        <input type="range" id="config-split" min="0" max="20" value="0" class="config-slider">
+        <span class="config-slider-val" id="config-split-val">0</span>
+      </div>
+
+      <label class="pt-label">Precio mensual global ($)</label>
+      <input class="pt-input" type="number" id="config-precio" placeholder="Ej: 12000">
+
+      <label class="pt-label">Backup de datos</label>
+      <div style="display:flex;gap:10px;margin-bottom:4px;">
+        <button class="modal-btn secundario" id="btn-exportar" style="font-size:.85rem;">↓ Exportar</button>
+        <button class="modal-btn secundario" id="btn-importar" style="font-size:.85rem;">↑ Importar</button>
+      </div>
+
+    </div>
+    <div class="pt-modal-footer">
+      <div class="pt-btn-row">
+        <button class="pt-btn pt-btn-secondary" id="config-cancelar">Cancelar</button>
+        <button class="pt-btn pt-btn-primary"   id="config-guardar">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONFIRM: Pago (verde) ═══ -->
+<div class="pt-confirm-overlay" id="confirm-overlay">
+  <div class="pt-confirm-box">
+    <div class="pt-modal-bar bar-green"></div>
+    <div class="pt-confirm-icon">✅</div>
+    <div class="pt-confirm-msg">¿Confirmás el pago de<br><span class="pt-confirm-name" id="confirm-nombre"></span>?</div>
+    <div class="pt-confirm-btns">
       <button id="confirm-no-pago">No</button>
-      <button id="confirm-si-pago">Sí, pagó</button>
+      <button id="confirm-si-pago" style="color:#4ade80;">Sí, pagó</button>
     </div>
   </div>
 </div>
 
-<!-- Modal confirm planificación -->
-<div class="confirm-overlay" id="plan-overlay">
-  <div class="confirm-box">
-    <div class="confirm-icon">📋</div>
-    <div class="confirm-msg">¿Confirmás que enviaste la planificación de<br><span class="confirm-name" id="plan-nombre"></span>?</div>
-    <div class="confirm-btns">
+<!-- ═══ CONFIRM: Planificación (violeta) ═══ -->
+<div class="pt-confirm-overlay" id="plan-overlay">
+  <div class="pt-confirm-box">
+    <div class="pt-modal-bar bar-purple"></div>
+    <div class="pt-confirm-icon">📋</div>
+    <div class="pt-confirm-msg">¿Confirmás que enviaste la planificación de<br><span class="pt-confirm-name" id="plan-nombre"></span>?</div>
+    <div class="pt-confirm-btns">
       <button id="confirm-no-plan">No</button>
-      <button style="background:#a78bfa;color:#111;padding:15px;border-radius:12px;border:none;font-family:'Literata',serif;font-size:1rem;font-weight:700;cursor:pointer;" id="confirm-si-plan">Sí, enviada</button>
+      <button id="confirm-si-plan" style="color:#a78bfa;">Sí, enviada</button>
     </div>
   </div>
 </div>
-</div><!-- /app-screen -->
-
-<!-- Modal perfil alumno -->
-<div class="confirm-overlay" id="perfil-overlay">
-  <div class="confirm-box" style="text-align:left;max-width:400px;width:100%;">
-    <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px;" id="perfil-titulo">Perfil</div>
-    <div style="font-size:.8rem;color:#666;margin-bottom:24px;">Editá los datos del alumno</div>
-
-    <label style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;">Nombre</label>
-    <input type="text" id="perfil-nombre" maxlength="60" style="
-      width:100%;background:#111;border:1px solid #333;border-radius:10px;
-      padding:13px 16px;font-family:'Literata',serif;font-size:1rem;
-      color:#f0f0f0;outline:none;margin-bottom:18px;" />
-
-    <label style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;">Fecha de nacimiento</label>
-    <input type="date" id="perfil-fnac" style="
-      width:100%;background:#111;border:1px solid #333;border-radius:10px;
-      padding:13px 16px;font-family:'Literata',serif;font-size:1rem;
-      color:#f0f0f0;outline:none;margin-bottom:24px;" />
-
-    <div class="confirm-btns">
-      <button id="perfil-cancelar" style="background:#2a2a2a;color:#f0f0f0;padding:15px;border-radius:12px;border:none;font-family:'Literata',serif;font-size:1rem;font-weight:700;cursor:pointer;">Cancelar</button>
-      <button id="perfil-guardar"  style="background:#f0f0f0;color:#111;padding:15px;border-radius:12px;border:none;font-family:'Literata',serif;font-size:1rem;font-weight:700;cursor:pointer;">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL CONFIGURACIÓN -->
-<div class="overlay" id="config-overlay">
-  <div class="modal">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div class="modal-title" style="margin-bottom:0;">⚙ CONFIGURACIÓN</div>
-      <button id="config-cerrar-x" style="background:none;border:none;color:#444;font-size:1.2rem;cursor:pointer;line-height:1;padding:4px 8px;transition:color .15s;" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#444'">✕</button>
-    </div>
-
-    <span class="config-label">Precio mensual por alumno ($)</span>
-    <input type="number" id="config-precio" placeholder="Ej: 12000">
-
-    <span class="config-label">Nombre del grupo</span>
-    <input type="text" id="config-nombre" placeholder="Ej: Deltarunners">
-
-    <span class="config-label">Colores del nombre</span>
-    <div class="config-colores-preview-row">
-      <div class="config-colores-row">
-        <div class="config-color-item">
-          <span>Color 1</span>
-          <input type="color" id="config-color1" value="#60a5fa">
-        </div>
-        <div class="config-color-item">
-          <span>Color 2</span>
-          <input type="color" id="config-color2" value="#fb923c">
-        </div>
-      </div>
-      <div class="config-preview-wrap">
-        <div class="config-preview-label">Así se verá</div>
-        <div id="config-preview">Preview</div>
-      </div>
-    </div>
-
-    <span class="config-label">Letras de color 1</span>
-    <div class="config-slider-wrap">
-      <input type="range" id="config-split" min="0" max="20" value="0" class="config-slider">
-      <span class="config-slider-val" id="config-split-val">0</span>
-    </div>
-
-    <span class="config-label">Backup de datos</span>
-    <div style="display:flex;gap:10px;margin-bottom:24px;">
-      <button class="modal-btn secundario" id="btn-exportar" style="font-size:.85rem;">↓ Exportar</button>
-      <button class="modal-btn secundario" id="btn-importar" style="font-size:.85rem;">↑ Importar</button>
-    </div>
-
-    <div class="config-btns">
-      <button class="modal-btn secundario" id="config-cancelar">Cancelar</button>
-      <button class="modal-btn primario"   id="config-guardar">Guardar cambios</button>
-    </div>
-  </div>
-</div>
-
 
 <script type="module" src="app.js"></script>
 </body>
